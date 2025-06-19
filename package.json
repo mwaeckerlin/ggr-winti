@@ -1,0 +1,28 @@
+{
+  "name": "ggr-winti",
+  "version": "'0.0.1",
+  "description": "Eine LaTeX-Klasse für parlamentarische Vorstösse (Motionen, Interpellationen, Postulate, Schriftliche Anfragen) im Parlament Winterthur.",
+  "private": true,
+  "workspaces": [
+    "src/lib",
+    "src/app",
+    "src/srv"
+  ],
+  "scripts": {
+    "build": "npm run build:lib && npm run build:app && npm run build:srv",
+    "build:lib": "npm run build --workspace=src/lib",
+    "build:app": "npm run build --workspace=src/app",
+    "build:srv": "npm run build --workspace=src/srv",
+    "dev:app": "npm run dev --workspace=src/app",
+    "dev:srv": "npm run start:dev --workspace=src/srv",
+    "clean": "npm run clean:lib && npm run clean:app && npm run clean:srv",
+    "clean:all": "npm run clean && rm -rf node_modules src/*/node_modules src/*/dist src/*/build && npm cache clean --force",
+    "clean:lib": "npm run clean --workspace=src/lib",
+    "clean:app": "rm -rf src/app/dist",
+    "clean:srv": "rm -rf src/srv/dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["latex", "vorstoss", "parliament", "winterthur"],
+  "author": "",
+  "license": "MIT"
+}

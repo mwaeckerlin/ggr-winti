@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  srv:
+    build:
+      context: .
+      dockerfile: src/srv/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      - ./tex:/usr/local/share/texmf/tex/latex/vorstoss:ro
+    restart: unless-stopped 

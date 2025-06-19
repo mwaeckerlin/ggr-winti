@@ -1,0 +1,17 @@
+{
+  "name": "@ggr-winti/lib",
+  "version": "0.0.1",
+  "description": "LaTeX Input Encoding Library for Vorstoss Generator",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["latex", "encoding", "validation", "vorstoss"],
+  "author": "",
+  "license": "MIT"
+}
