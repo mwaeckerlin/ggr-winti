@@ -186,37 +186,35 @@ sudo dnf install texlive-lang-german
 ### TypeScript/JavaScript
 
 - **Keine unnötigen Semikolons**: Semikolons nur verwenden, wenn sie syntaktisch erforderlich sind
-- **Klammern ohne Spaces**: `{a}` statt `{ a }`
-- **Import-Statements**: `import {a, b} from 'module'` statt `import { a, b } from 'module'`
-- **Funktionsparameter**: `function(a, b)` statt `function( a, b )`
-- **Objekt-Literale**: `{a: 1, b: 2}` statt `{ a: 1, b: 2 }`
+- **Nach jedem Komma ein Space**: z.B. `a, b, c` (außer in Objektliteralen, Funktionsparametern und Imports: `{a,b}`, `function(a,b)`, `import {a,b} from 'x'`)
+- **Vor und nach jedem `=>` ein Space**: z.B. `(a, b) => c` (außer in Objektliteralen, Funktionsparametern und Imports)
+- **Nach jedem `if` ein Space vor der Klammer**: z.B. `if (x > 0)`
+- **Bei Funktionsdefinitionen KEIN Space zwischen Funktionsname und Klammer**: z.B. `function(a, b)`
+- **Objekt-Literale, Funktionsparameter, Imports: KEIN Space in Klammern**: `{a: 1, b: 2}`, `function(a, b)`, `import {a, b} from 'x'`
 - **Keine unnötigen Variablen**: Variablen nur erstellen, wenn sie mindestens zweimal verwendet werden
 - **Keine unnötigen Klammern**: Einzeiler ohne Klammern, nur bei mehreren Statements
+- **Bevorzuge Arrow-Funktionen (`=>`)**: Arrow-Funktionen sind der Standard für Funktionen, außer es ist zwingend eine klassische Funktion nötig. Arrow-Funktionen sollten möglichst klar und ausdrucksstark formuliert sein.
 
 ### Beispiele
 
 ```typescript
 // ✅ Korrekt - Variable wird zweimal verwendet
 const escapedText = encodeLatexInput(text)
-return `\\documentclass{${escapedText}}`
 
-// ❌ Falsch - Variable wird nur einmal verwendet
-const escapedText = encodeLatexInput(text)
-return `\\documentclass{${encodeLatexInput(text)}}`
+// ✅ Korrekt - Komma mit Space, Arrow mit Space, if mit Space
+const arr = [1, 2, 3]
+arr.map((a, b) => a + b)
+if (arr.length > 0) console.log(arr)
 
-// ✅ Korrekt - Einzeiler ohne Klammern
-if (condition) return true
-for (const item of items) process(item)
+// ✅ Korrekt - Objektliteral, Funktionsparameter, Import ohne Space in Klammern
+const obj = {a: 1, b: 2}
+const foo = (a, b) => a + b
+import {a, b} from 'modulename'
 
-// ❌ Falsch - Unnötige Klammern bei Einzeilern
-if (condition) { return true }
-for (const item of items) { process(item) }
-
-// ✅ Korrekt - Klammern nur bei mehreren Statements
-if (condition) {
-  doSomething()
-  doSomethingElse()
-}
+// ✅ Korrekt - Arrow-Funktion bevorzugt, klar und ausdrucksstark
+const sum = (a, b) => a + b
+const isEven = n => n % 2 === 0
+const logIfPositive = n => { if (n > 0) console.log(n) }
 ```
 
 ### LaTeX
