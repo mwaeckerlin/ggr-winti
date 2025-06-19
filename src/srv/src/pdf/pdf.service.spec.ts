@@ -1,24 +1,20 @@
-import {Test,TestingModule} from '@nestjs/testing'
-import {PdfService} from './pdf.service'
-import {GeneratePdfDto, Vorstosstyp} from './dto/generate-pdf.dto'
-import * as fs from 'fs'
-import * as path from 'path'
-import {exec as execOrig} from 'child_process'
-
-// Mock fs module
-jest.mock('fs', () => ({
-  existsSync:jest.fn(),
-  mkdirSync:jest.fn(),
-  rmSync:jest.fn(),
-  writeFileSync:jest.fn(),
-  readFileSync:jest.fn(),
-  unlinkSync:jest.fn(),
-  readdirSync:jest.fn(),
-  statSync:jest.fn()
-}))
-
-// Mock child_process
+let pdfExists = true
 const mockExec = jest.fn()
+
+jest.mock('fs', () => {
+  const unlinkSync = jest.fn()
+  return {
+    existsSync: jest.fn((file) => file && file.toString().endsWith('.pdf') ? pdfExists : true),
+    mkdirSync: jest.fn(),
+    rmSync: jest.fn(),
+    writeFileSync: jest.fn(),
+    readFileSync: jest.fn(() => Buffer.from('fake-pdf-content')),
+    unlinkSync,
+    readdirSync: jest.fn(),
+    statSync: jest.fn()
+  }
+})
+
 jest.mock('child_process', () => ({
   exec: mockExec
 }))
@@ -32,6 +28,12 @@ jest.mock('./pdf.service', () => {
   }
 })
 
+import {Test,TestingModule} from '@nestjs/testing'
+import {PdfService} from './pdf.service'
+import {GeneratePdfDto, Vorstosstyp} from './dto/generate-pdf.dto'
+import * as fs from 'fs'
+import * as path from 'path'
+
 describe('PdfService', () => {
   let service:PdfService
   let mockFs:jest.Mocked<typeof fs>
@@ -43,14 +45,17 @@ describe('PdfService', () => {
     mockExec.mockReset()
     service.encodeLatexInput = text => `escaped_${text}`
     service.htmlToLatex = html => html.replace(/<[^>]*>/g, '')
+    mockFs.unlinkSync.mockClear()
+    pdfExists = true
   })
 
   describe('generatePdf', () => {
     const mockDto:GeneratePdfDto = {text:'Test content', vorstosstyp:Vorstosstyp.POSTULAT, betreffend:'Test Vorstoss', eingereichtvon:'Test User', nummer:'2024.001', unterstuetzer:1}
     beforeEach(() => {
-      mockFs.existsSync.mockReturnValue(false)
       mockFs.readFileSync.mockReturnValue(Buffer.from('fake-pdf-content'))
       mockExec.mockImplementation((cmd, callback) => {if (callback) callback(null, {stdout:'', stderr:''}); return{}as any})
+      mockFs.unlinkSync.mockImplementation(() => {})
+      pdfExists = true
     })
     it('should generate PDF with text content', async () => {
       const result = await service.generatePdf(mockDto)
@@ -81,10 +86,12 @@ describe('PdfService', () => {
     it('should handle pdflatex execution error', async () => {
       mockExec.mockImplementation((cmd, callback) => {if (callback) callback(new Error('pdflatex failed'), {stdout:'', stderr:'error'}); return{}as any})
       await expect(service.generatePdf(mockDto)).rejects.toThrow('PDF generation failed: pdflatex failed')
+      expect(mockFs.unlinkSync).toHaveBeenCalledTimes(4)
     })
     it('should handle missing PDF output file', async () => {
-      mockFs.existsSync.mockImplementation(path => {if (path.toString().endsWith('.pdf')) return false; return true})
+      pdfExists = false
       await expect(service.generatePdf(mockDto)).rejects.toThrow('PDF generation failed - no output file created')
+      expect(mockFs.unlinkSync).toHaveBeenCalledTimes(3)
     })
     it('should cleanup temporary files on success', async () => {
       await service.generatePdf(mockDto)

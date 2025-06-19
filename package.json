@@ -20,7 +20,7 @@
     "clean:lib": "npm run clean --workspace=src/lib",
     "clean:app": "rm -rf src/app/dist",
     "clean:srv": "rm -rf src/srv/dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm test --workspace=src/srv && npm test --workspace=src/lib && npm test --workspace=src/app"
   },
   "keywords": ["latex", "vorstoss", "parliament", "winterthur"],
   "author": "",
