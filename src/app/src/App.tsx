@@ -87,7 +87,7 @@ function App() {
             setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
             resolve()
           } catch (err) {
-            toast.error('Die hochgeladene Datei ist keine gültige JSON-Datei.')
+            toast.error('Ungültige Datei.')
             reject(err)
           } finally {
             target.value = '' // Reset input
