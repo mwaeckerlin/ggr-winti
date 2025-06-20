@@ -111,20 +111,21 @@ function getVorstosstypWithPrefix(
   return typ
 }
 
-export function generateFilename(dto: GeneratePdfDto): string {
+export function generateFilename(dto: GeneratePdfDto, forPreview: boolean = false): string {
   const parts: (string | null)[] = []
 
   // 1. Datum
   parts.push(formatDate(dto.datum))
 
   // 2. Nummer
-  parts.push(dto.nummer || null)
+  parts.push(dto.nummer || (forPreview ? '<nummer>' : null))
 
   // 3. Vorstosstyp (mit Prefix)
-  parts.push(getVorstosstypWithPrefix(dto.vorstosstyp, dto.dringlich, dto.budget))
+  const vorstosstypPart = getVorstosstypWithPrefix(dto.vorstosstyp, dto.dringlich, dto.budget)
+  parts.push(vorstosstypPart || (forPreview ? '<vorstosstyp>' : null))
 
   // 4. Betreffend
-  parts.push(dto.betreffend || null)
+  parts.push(dto.betreffend || (forPreview ? '<betreffend>' : null))
 
   const combinedName = parts.filter(Boolean).join('_')
 

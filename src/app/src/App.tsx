@@ -248,9 +248,9 @@ function App() {
           Link kopieren
         </button>
         <div className="filename-preview">
-          Vorschau Dateiname (JSON): <strong>{generateFilename(formData)}.json</strong>
+          Vorschau Dateiname (JSON): <strong>{generateFilename(formData, true)}.json</strong>
           <br />
-          Vorschau Dateiname (PDF): <strong>{generateFilename(formData)}.pdf</strong>
+          Vorschau Dateiname (PDF): <strong>{generateFilename(formData, true)}.pdf</strong>
         </div>
       </footer>
     </div>
