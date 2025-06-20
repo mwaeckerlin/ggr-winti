@@ -10,6 +10,36 @@ export enum Vorstosstyp {
 }
 
 export class GeneratePdfDto {
+  @IsEnum(Vorstosstyp)
+  vorstosstyp: Vorstosstyp
+
+  @IsOptional()
+  @IsBoolean()
+  dringlich?: boolean = false
+
+  @IsOptional()
+  @IsBoolean()
+  budget?: boolean = false
+
+  @IsOptional()
+  @IsString()
+  betreffend?: string
+
+  @IsOptional()
+  @IsString()
+  eingereichtvon?: string
+  @IsOptional()
+  @IsString()
+  datum?: string
+
+  @IsOptional()
+  @IsString()
+  nummer?: string
+
+  @IsOptional()
+  @IsNumber()
+  unterstuetzer?: number
+
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !o.antrag && !o.begruendung)
@@ -24,36 +54,4 @@ export class GeneratePdfDto {
   @IsString()
   @ValidateIf((o) => !o.text && o.antrag)
   begruendung?: string
-
-  @IsOptional()
-  @IsEnum(Vorstosstyp)
-  vorstosstyp?: Vorstosstyp
-
-  @IsOptional()
-  @IsBoolean()
-  dringlich?: boolean = false
-
-  @IsOptional()
-  @IsBoolean()
-  budget?: boolean = false
-
-  @IsOptional()
-  @IsString()
-  betreffend?: string = 'Vorstoss'
-
-  @IsOptional()
-  @IsString()
-  eingereichtvon?: string = 'System'
-
-  @IsOptional()
-  @IsString()
-  datum?: string
-
-  @IsOptional()
-  @IsString()
-  nummer?: string = '2024.001'
-
-  @IsOptional()
-  @IsNumber()
-  unterstuetzer?: number = 1
 }

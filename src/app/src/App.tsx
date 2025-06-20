@@ -19,7 +19,7 @@ function App() {
     eingereichtvon: getDefaultName(),
     datum: formatDate(new Date()),
     nummer: '',
-    vorstosstyp: undefined,
+    vorstosstyp: Vorstosstyp.INTERPELLATION,
     antrag: '',
     begruendung: '',
     dringlich: false,
@@ -247,11 +247,6 @@ function App() {
         <button className="action-button" onClick={handleCopyLink}>
           Link kopieren
         </button>
-        <div className="filename-preview">
-          Vorschau Dateiname (JSON): <strong>{generateFilename(formData, true)}.json</strong>
-          <br />
-          Vorschau Dateiname (PDF): <strong>{generateFilename(formData, true)}.pdf</strong>
-        </div>
       </footer>
     </div>
   )

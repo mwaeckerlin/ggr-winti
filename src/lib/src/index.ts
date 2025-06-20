@@ -76,56 +76,47 @@ function sanitize(str: string): string {
 function sanitizeFilename(name: string): string {
   // Ersetze alles, was nicht Buchstabe, Ziffer oder - ist, durch _
   return name
-    .replace(/[^a-zA-Z0-9äöüÄÖÜ\-]/g, '_')
+    .replace(/[^-.a-zA-Z0-9äöüÄÖÜéàèçâêëàáâãẽäõũôûòùóú]/g, '_')
+    .replace(/[-.]/g, '-')
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '')
 }
 
-function getVorstosstypWithPrefix(
-  vorstosstyp: Vorstosstyp | undefined,
-  dringlich: boolean | undefined,
-  budget: boolean | undefined,
-): string | null {
-  if (!vorstosstyp) {
-    return null
-  }
+export const getVorstossName = (vorstosstyp: Vorstosstyp) => {
+  switch (vorstosstyp) {
+    case 'motion':
+      return {flex: 'e', typ: 'Motion'}
+    case 'interpellation':
+      return {flex: 'e', typ: 'Interpellation'}
+    case 'postulat':
+      return {flex: 'es', typ: 'Postulat'}
+    case 'anfrage':
+      return {flex: 'e', typ: 'Schriftliche Anfrage'}
+    case 'beschlussantrag':
+      return {flex: 'er', typ: 'Beschlussantrag'}
+    case 'initiative':
+      return {flex: 'e', typ: 'Parlamentarische Initiative'}
+    default:
+      return {flex: undefined, typ: undefined}
+  }}
 
-  const typ = vorstosstyp.charAt(0).toUpperCase() + vorstosstyp.slice(1)
-
-  if (dringlich) {
-    let adjective = 'Dringliches' // neuter default (das Postulat)
-    if (
-      ['motion', 'interpellation', 'anfrage', 'initiative'].includes(vorstosstyp)
-    ) {
-      adjective = 'Dringliche' // feminine
-    } else if (vorstosstyp === 'beschlussantrag') {
-      adjective = 'Dringlicher' // masculine
-    }
-    return `${adjective}_${typ}`
-  }
-
-  if (budget) {
-    return `Budget_${typ}`
-  }
-
-  return typ
+function getVorstosstypWithPrefix(vorstosstyp: Vorstosstyp,dringlich: boolean= false,budget: boolean= false): string | undefined {
+  const parts: (string|undefined)[] = []
+  const {typ, flex} = getVorstossName(vorstosstyp)
+  if (dringlich) parts.push('Dringlich' + flex)
+  if (budget)parts.push('Budget')
+  parts.push(typ)
+  return parts.filter(Boolean).join('_')
 }
 
-export function generateFilename(dto: GeneratePdfDto, forPreview: boolean = false): string {
-  const parts: (string | null)[] = []
-
-  // 1. Datum
+export function generateFilename(dto: GeneratePdfDto): string {
+  const parts: (string | undefined)[] = []
   parts.push(formatDate(dto.datum))
-
-  // 2. Nummer
-  parts.push(dto.nummer || (forPreview ? '<nummer>' : null))
-
-  // 3. Vorstosstyp (mit Prefix)
-  const vorstosstypPart = getVorstosstypWithPrefix(dto.vorstosstyp, dto.dringlich, dto.budget)
-  parts.push(vorstosstypPart || (forPreview ? '<vorstosstyp>' : null))
+  parts.push(dto.nummer)
+  parts.push(getVorstosstypWithPrefix(dto.vorstosstyp, dto.dringlich, dto.budget))
 
   // 4. Betreffend
-  parts.push(dto.betreffend || (forPreview ? '<betreffend>' : null))
+  parts.push(dto.betreffend)
 
   const combinedName = parts.filter(Boolean).join('_')
 
