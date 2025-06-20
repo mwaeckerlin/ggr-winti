@@ -1,5 +1,6 @@
 import {useState, useRef, useEffect} from 'react'
 import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate} from '@ggr-winti/lib'
+import Button from './components/Button'
 
 function App() {
   // Link-Mode erkennen
@@ -62,25 +63,45 @@ function App() {
     URL.revokeObjectURL(url)
   }
 
-  const handleUploadJson = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target?.result as string)
-        setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
-      } catch (err) {
-        alert('Ungültige JSON-Datei!')
+  const handleUploadClick = () => {
+    return new Promise<void>((resolve, reject) => {
+      const fileInput = fileInputRef.current
+      if (!fileInput) {
+        return reject(new Error('File input not found.'))
       }
-    }
-    reader.readAsText(file)
-    // Reset input so same file can be uploaded again
-    e.target.value = ''
-  }
 
-  const triggerUpload = () => {
-    fileInputRef.current?.click()
+      const handleFileChange = (event: Event) => {
+        const target = event.target as HTMLInputElement
+        const file = target.files?.[0]
+        // Clean up the event listener
+        fileInput.removeEventListener('change', handleFileChange)
+        if (!file) {
+          return resolve() // User cancelled the dialog
+        }
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target?.result as string)
+            setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
+            resolve()
+          } catch (err) {
+            alert('Ungültige JSON-Datei!')
+            reject(err)
+          } finally {
+            target.value = '' // Reset input
+          }
+        }
+        reader.onerror = (err) => {
+          alert('Fehler beim Lesen der Datei!')
+          reject(err)
+        }
+        reader.readAsText(file)
+      }
+
+      fileInput.addEventListener('change', handleFileChange, {once: true})
+      fileInput.click()
+    })
   }
 
   // Wenn localStorage sich ändert (z.B. durch Upload), setze den eigenen Namen als Default, falls das Feld leer ist
@@ -232,21 +253,13 @@ function App() {
             <textarea id="begruendung" name="begruendung" value={formData.begruendung} onChange={handleChange} rows={8} disabled={isLinkMode}></textarea>
           </div>
         </form>
-        <input type="file" accept="application/json" style={{display: 'none'}} ref={fileInputRef} onChange={handleUploadJson} />
+        <input type="file" accept="application/json" style={{display: 'none'}} ref={fileInputRef} />
       </main>
       <footer>
-        <button className="action-button" onClick={triggerUpload}>
-          JSON hochladen
-        </button>
-        <button className="action-button" onClick={handleDownloadJson}>
-          JSON herunterladen
-        </button>
-        <button className="action-button" onClick={handleDownloadPdf}>
-          PDF herunterladen
-        </button>
-        <button className="action-button" onClick={handleCopyLink}>
-          Link kopieren
-        </button>
+        <Button onClick={handleUploadClick}>JSON hochladen</Button>
+        <Button onClick={handleDownloadJson}>JSON herunterladen</Button>
+        <Button onClick={handleDownloadPdf}>PDF herunterladen</Button>
+        <Button onClick={handleCopyLink}>Link kopieren</Button>
       </footer>
     </div>
   )
