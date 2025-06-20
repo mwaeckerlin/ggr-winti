@@ -1,5 +1,5 @@
-import {useState, useRef, useEffect} from 'react'
-import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate} from '@ggr-winti/lib'
+import {useState, useRef, useEffect, useMemo} from 'react'
+import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName} from '@ggr-winti/lib'
 import {Toaster, toast} from 'react-hot-toast'
 import Button from './components/Button'
 
@@ -29,6 +29,8 @@ function App() {
     unterstuetzer: 0,
   })
 
+  const generatedFileName = useMemo(() => generateFilename(formData), [formData])
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -51,7 +53,7 @@ function App() {
   }
 
   const handleDownloadJson = () => {
-    const fileName = `${generateFilename(formData)}.json`
+    const fileName = `${generatedFileName}.json`
     const jsonString = JSON.stringify(formData, null, 2)
     const blob = new Blob([jsonString], {type: 'application/json'})
     const url = URL.createObjectURL(blob)
@@ -166,7 +168,7 @@ function App() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${generateFilename(formData)}.pdf`
+      a.download = `${generatedFileName}.pdf`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -213,10 +215,9 @@ function App() {
             <div className="form-group">
               <label htmlFor="vorstosstyp">Typ</label>
               <select id="vorstosstyp" name="vorstosstyp" value={formData.vorstosstyp as string} onChange={handleChange} required disabled={isLinkMode}>
-                <option value="">Bitte wählen...</option>
-                {(Object.values(Vorstosstyp) as string[]).map((typ: string) => (
+                {(Object.values(Vorstosstyp) as Vorstosstyp[]).map((typ) => (
                   <option key={typ} value={typ}>
-                    {typ.charAt(0).toUpperCase() + typ.slice(1)}
+                    {getVorstossName(typ).typ}
                   </option>
                 ))}
               </select>
