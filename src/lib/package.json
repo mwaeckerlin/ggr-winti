@@ -6,12 +6,28 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "start": "rollup -c",
+    "start:dev": "rollup -c -w",
     "build": "rollup -c",
-    "dev": "rollup -c -w",
     "clean": "rm -rf dist",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "echo 'No tests yet' && exit 0"
   },
-  "keywords": ["latex", "encoding", "validation", "vorstoss"],
+  "keywords": [
+    "latex",
+    "encoding",
+    "validation",
+    "vorstoss"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "28.0.6",
+    "@rollup/plugin-node-resolve": "16.0.1",
+    "@rollup/plugin-typescript": "12.1.3",
+    "prettier": "3.5.3"
+  },
+  "dependencies": {
+    "class-validator": "0.14.2"
+  }
 }

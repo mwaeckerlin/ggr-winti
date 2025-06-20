@@ -9,20 +9,25 @@
     "src/srv"
   ],
   "scripts": {
-    "build": "npm run build:lib && npm run build:app && npm run build:srv",
-    "build:lib": "npm run build --workspace=src/lib",
-    "build:app": "npm run build --workspace=src/app",
-    "build:srv": "npm run build --workspace=src/srv",
-    "dev:app": "npm run dev --workspace=src/app",
-    "dev:srv": "npm run start:dev --workspace=src/srv",
-    "clean": "npm run clean:lib && npm run clean:app && npm run clean:srv",
-    "clean:all": "npm run clean && rm -rf node_modules src/*/node_modules src/*/dist src/*/build && npm cache clean --force",
-    "clean:lib": "npm run clean --workspace=src/lib",
-    "clean:app": "rm -rf src/app/dist",
-    "clean:srv": "rm -rf src/srv/dist",
-    "test": "npm test --workspace=src/srv && npm test --workspace=src/lib && npm test --workspace=src/app"
+    "start": "concurrently \"npm:start@*\"",
+    "start:dev": "concurrently \"npm:start:dev@*\"",
+    "build": "npm run build --workspaces",
+    "build:lib": "npm run build --workspace=@ggr-winti/lib",
+    "build:app": "npm run build --workspace=app",
+    "build:srv": "npm run build --workspace=srv",
+    "clean": "npm run clean --workspaces && rm -rf src/app/dist src/srv/dist",
+    "clean:all": "npm run clean && rm -rf node_modules",
+    "test": "npm test --workspaces --if-present"
   },
-  "keywords": ["latex", "vorstoss", "parliament", "winterthur"],
+  "keywords": [
+    "latex",
+    "vorstoss",
+    "parliament",
+    "winterthur"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "9.1.2"
+  }
 }

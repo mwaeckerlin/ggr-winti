@@ -194,6 +194,8 @@ sudo dnf install texlive-lang-german
 - **Keine unnötigen Variablen**: Variablen nur erstellen, wenn sie mindestens zweimal verwendet werden
 - **Keine unnötigen Klammern**: Einzeiler ohne Klammern, nur bei mehreren Statements
 - **Bevorzuge Arrow-Funktionen (`=>`)**: Arrow-Funktionen sind der Standard für Funktionen, außer es ist zwingend eine klassische Funktion nötig. Arrow-Funktionen sollten möglichst klar und ausdrucksstark formuliert sein.
+- **Imports immer auf einer Zeile**: Alle importierten Member aus einem Modul müssen in einer einzigen `import`-Anweisung auf einer Zeile stehen.
+- **Single Source of Truth (Kein Copy-Paste)**: Code darf nicht dupliziert werden. Logik, Typen oder Konstanten, die an mehr als einer Stelle benötigt werden, müssen in einer zentralen, wiederverwendbaren Funktion oder Definition in der `lib`-Bibliothek gekapselt und von dort importiert werden.
 
 ### Beispiele
 

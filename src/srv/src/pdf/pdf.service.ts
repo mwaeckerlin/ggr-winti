@@ -1,36 +1,12 @@
-import { Injectable } from '@nestjs/common'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-import { GeneratePdfDto } from './dto/generate-pdf.dto'
+import {Injectable} from '@nestjs/common'
+import {exec} from 'child_process'
+import {promisify} from 'util'
+import {GeneratePdfDto, encodeLatexInput, htmlToLatex} from '@ggr-winti/lib'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
 
 const execAsync = promisify(exec)
-
-// Temporary local implementations until library is properly linked
-export function encodeLatexInput(text: string): string {
-  return text
-    .replace(/\\/g, '\\textbackslash{}')
-    .replace(/%/g, '\%')
-    .replace(/\$/g, '\$')
-    .replace(/#/g, '\#')
-    .replace(/&/g, '\&')
-    .replace(/{/g, '\{')
-    .replace(/}/g, '\}')
-    .replace(/~/g, '\textasciitilde{}')
-    .replace(/\^/g, '\textasciicircum{}')
-    .replace(/_/g, '\_')
-}
-
-export function htmlToLatex(html: string): string {
-  return html
-    .replace(/<strong>(.*?)<\/strong>/g, '\\textbf{$1}')
-    .replace(/<em>(.*?)<\/em>/g, '\\textit{$1}')
-    .replace(/<br\s*\/?/g, '\\\\')
-    .replace(/<p>(.*?)<\/p>/g, '$1\\\\')
-    .replace(/<[^>]*>/g, '')
-}
 
 @Injectable()
 export class PdfService {
@@ -55,47 +31,65 @@ export class PdfService {
     const timestamp = Date.now()
     const randomId = crypto.randomBytes(8).toString('hex')
     const baseName = `vorstoss_${timestamp}_${randomId}`
-    
+
     const latexFile = path.join(this.tempDir, `${baseName}.tex`)
     const auxFile = path.join(this.tempDir, `${baseName}.aux`)
     const logFile = path.join(this.tempDir, `${baseName}.log`)
     const pdfFile = path.join(this.tempDir, `${baseName}.pdf`)
-    
+
+    let errorOccurred = false
+
     try {
-      // 1. LaTeX-Kommandos escapen
-      let content = ''
-      
+      // 1. Generate the main content based on the DTO
+      let latexContent: string
       if (dto.text) {
-        content = this.generateLatexWithTitle(dto)
+        latexContent = this.generateLatexWithTitle(dto)
       } else if (dto.antrag && dto.begruendung) {
-        content = this.generateLatexWithAntragBegruendung(dto)
+        latexContent = this.generateLatexWithAntragBegruendung(dto)
       } else {
         throw new Error('Either text or both antrag and begruendung must be provided')
       }
 
-      // 2. HTML2LaTeX (nur für den Haupt-text / antrag / begruendung)
-      content = this.htmlToLatex(content)
+      // 2. Write the final LaTeX file
+      fs.writeFileSync(latexFile, latexContent)
 
-      // 3. pdflatex aufrufen
-      fs.writeFileSync(latexFile, content)
-      
-      await execAsync(`pdflatex -interaction=nonstopmode -output-directory=${this.tempDir} ${latexFile}`)
-      
+      // 3. Execute pdflatex with TEXINPUTS environment variable
+      const texInputsPath = process.env.TEX_CLASS_PATH
+      if (!texInputsPath || !fs.existsSync(texInputsPath)) {
+        throw new Error(`TEX_CLASS_PATH environment variable is not set or path is invalid: ${texInputsPath}`)
+      }
+
+      const command = `pdflatex -interaction=nonstopmode -output-directory=${this.tempDir} ${latexFile}`
+
+      await execAsync(command, {
+        env: {
+          ...process.env,
+          TEXINPUTS: `${texInputsPath}:`, // The trailing colon tells TeX to also search default paths
+        },
+      })
+
       // Verify PDF was created
       if (!fs.existsSync(pdfFile)) {
         throw new Error('PDF generation failed - no output file created')
       }
-      
+
       return {
         success: true,
         pdf: fs.readFileSync(pdfFile),
-        message: 'PDF generated successfully'
+        message: 'PDF generated successfully',
       }
     } catch (error) {
-      throw new Error(`PDF generation failed: ${error.message}`)
+      errorOccurred = true
+      let logContent = 'No log file found.'
+      if (fs.existsSync(logFile)) {
+        logContent = fs.readFileSync(logFile, 'utf-8')
+      }
+      throw new Error(`PDF generation failed: ${error.message}\n\n--- LaTeX Log ---\n${logContent}`)
     } finally {
-      // Always cleanup temporary files, even on error
-      this.cleanupTempFiles([latexFile, auxFile, logFile, pdfFile])
+      // Only cleanup if no error occurred to allow for inspection
+      if (!errorOccurred) {
+        this.cleanupTempFiles([latexFile, auxFile, logFile, pdfFile])
+      }
     }
   }
 
@@ -119,11 +113,11 @@ export class PdfService {
       if (!Array.isArray(files)) return
       const now = Date.now()
       const maxAge = 24 * 60 * 60 * 1000 // 24 hours
-      
+
       for (const file of files) {
         const filePath = path.join(this.tempDir, file)
         const stats = fs.statSync(filePath)
-        
+
         // Remove files older than 24 hours
         if (now - stats.mtime.getTime() > maxAge) {
           try {
@@ -143,7 +137,10 @@ export class PdfService {
     const escapedBetreffend = this.encodeLatexInput(dto.betreffend || 'Vorstoss')
     const escapedEingereichtvon = this.encodeLatexInput(dto.eingereichtvon || 'System')
     const escapedNummer = this.encodeLatexInput(dto.nummer || '2024.001')
-    
+
+    // First, convert HTML-like tags to LaTeX, then escape the entire text
+    const processedText = this.encodeLatexInput(this.htmlToLatex(dto.text || ''))
+
     return `\\documentclass[${this.buildClassOptions(dto)}]{vorstoss}
 \\betreffend{${escapedBetreffend}}
 \\eingereichtvon{${escapedEingereichtvon}}
@@ -155,7 +152,7 @@ export class PdfService {
 
 \\titel
 
-${this.encodeLatexInput(dto.text || '')}
+${processedText}
 
 \\end{document}`
   }
@@ -164,7 +161,11 @@ ${this.encodeLatexInput(dto.text || '')}
     const escapedBetreffend = this.encodeLatexInput(dto.betreffend || 'Vorstoss')
     const escapedEingereichtvon = this.encodeLatexInput(dto.eingereichtvon || 'System')
     const escapedNummer = this.encodeLatexInput(dto.nummer || '2024.001')
-    
+
+    // First, convert HTML-like tags to LaTeX, then escape
+    const processedAntrag = this.encodeLatexInput(this.htmlToLatex(dto.antrag || ''))
+    const processedBegruendung = this.encodeLatexInput(this.htmlToLatex(dto.begruendung || ''))
+
     return `\\documentclass[${this.buildClassOptions(dto)}]{vorstoss}
 \\betreffend{${escapedBetreffend}}
 \\eingereichtvon{${escapedEingereichtvon}}
@@ -176,30 +177,30 @@ ${this.encodeLatexInput(dto.text || '')}
 
 \\antrag
 
-${this.encodeLatexInput(dto.antrag || '')}
+${processedAntrag}
 
 \\begruendung
 
-${this.encodeLatexInput(dto.begruendung || '')}
+${processedBegruendung}
 
 \\end{document}`
   }
 
   private buildClassOptions(dto: GeneratePdfDto): string {
     const options: string[] = []
-    
+
     if (dto.vorstosstyp) {
       options.push(dto.vorstosstyp)
     }
-    
+
     if (dto.dringlich) {
       options.push('dringlich')
     }
-    
+
     if (dto.budget) {
       options.push('budget')
     }
-    
+
     return options.join(',')
   }
 }
