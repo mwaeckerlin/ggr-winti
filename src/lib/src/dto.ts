@@ -11,7 +11,7 @@ export enum Vorstosstyp {
 
 export class GeneratePdfDto {
   @IsEnum(Vorstosstyp)
-  vorstosstyp: Vorstosstyp
+  vorstosstyp: Vorstosstyp = Vorstosstyp.INTERPELLATION
 
   @IsOptional()
   @IsBoolean()

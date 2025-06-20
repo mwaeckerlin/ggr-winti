@@ -1,5 +1,6 @@
 import {useState, useRef, useEffect} from 'react'
 import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate} from '@ggr-winti/lib'
+import {Toaster, toast} from 'react-hot-toast'
 import Button from './components/Button'
 
 function App() {
@@ -86,14 +87,14 @@ function App() {
             setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
             resolve()
           } catch (err) {
-            alert('Ungültige JSON-Datei!')
+            toast.error('Die hochgeladene Datei ist keine gültige JSON-Datei.')
             reject(err)
           } finally {
             target.value = '' // Reset input
           }
         }
         reader.onerror = (err) => {
-          alert('Fehler beim Lesen der Datei!')
+          toast.error('Die Datei konnte nicht gelesen werden.')
           reject(err)
         }
         reader.readAsText(file)
@@ -115,7 +116,7 @@ function App() {
           const json = JSON.parse(decodeURIComponent(escape(atob(fileParam))))
           setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
         } catch (err) {
-          alert('Ungültiger Link: Datei-Parameter konnte nicht gelesen werden!')
+          toast.error('Die Daten aus dem Link konnten nicht geladen werden.')
         }
       } else if (!formData.eingereichtvon) {
         // wie bisher: eigenen Namen aus localStorage setzen
@@ -135,8 +136,9 @@ function App() {
       const base64 = btoa(unescape(encodeURIComponent(jsonString)))
       const url = `${window.location.origin}${window.location.pathname}?file=${base64}`
       await navigator.clipboard.writeText(url)
+      toast.success('Link wurde in die Zwischenablage kopiert.')
     } catch (err) {
-      alert('Kopieren fehlgeschlagen!')
+      toast.error('Der Link konnte nicht in die Zwischenablage kopiert werden.')
     }
   }
 
@@ -147,7 +149,19 @@ function App() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(formData),
       })
-      if (!response.ok) throw new Error('Fehler beim PDF-Download')
+      if (!response.ok) {
+        let message = 'Die PDF-Erstellung ist fehlgeschlagen.'
+        try {
+          const errorData = await response.json()
+          const serverMessage = errorData.message
+          if (serverMessage) {
+            message = Array.isArray(serverMessage) ? serverMessage.join(' ') : serverMessage
+          }
+        } catch (e) {
+          // ignore if response is not json
+        }
+        throw new Error(message)
+      }
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -157,13 +171,14 @@ function App() {
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
-    } catch (err) {
-      alert('PDF-Download fehlgeschlagen!')
+    } catch (err: any) {
+      toast.error(err.message || 'Ein unbekannter Fehler ist aufgetreten.')
     }
   }
 
   return (
     <div className="app-container">
+      <Toaster position="top-center" />
       <header>
         <div className="logo">
           {/* Placeholder for left logo */}

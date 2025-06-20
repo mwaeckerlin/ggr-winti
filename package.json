@@ -9,8 +9,8 @@
     "src/srv"
   ],
   "scripts": {
-    "start": "concurrently \"npm:start@*\"",
-    "start:dev": "concurrently \"npm:start:dev@*\"",
+    "start": "concurrently -k \"npm run start --workspace=@ggr-winti/lib\" \"npm run start --workspace=app\" \"npm run start --workspace=srv\"",
+    "start:dev": "concurrently -k \"npm run start:dev -w=@ggr-winti/lib\" \"npm run start:dev -w=app\" \"npm run start:dev -w=srv\"",
     "build": "npm run build --workspaces",
     "build:lib": "npm run build --workspace=@ggr-winti/lib",
     "build:app": "npm run build --workspace=app",
@@ -30,5 +30,8 @@
   "devDependencies": {
     "concurrently": "9.1.2",
     "prettier": "3.5.3"
+  },
+  "dependencies": {
+    "react-hot-toast": "2.5.2"
   }
 }
