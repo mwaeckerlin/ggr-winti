@@ -100,7 +100,7 @@ html, body {
 
 .app-container {
   display: grid;
-  grid-template-rows: auto 1fr auto; /* header, main, footer */
+  grid-template-rows: min-content 1fr min-content; /* header, main, footer */
   height: 100vh;
 }
 
@@ -114,8 +114,9 @@ html, body {
 header {
   grid-row: 1;
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Center the title block */
   align-items: center;
+  position: relative; /* Make it the positioning context */
   padding: var(--header-padding);
   border-bottom: var(--border-width) solid var(--color-border);
   background-color: var(--color-light);
@@ -124,9 +125,25 @@ header {
 }
 
 .logo {
-  flex-shrink: 0;
-  width: var(--space-7);
-  height: var(--space-7);
+  position: absolute; /* Take logos out of the normal flow */
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: var(--header-padding) 0; /* Respect vertical padding */
+}
+
+.logo:first-child {
+  left: var(--header-padding);
+}
+
+.logo:last-child {
+  right: var(--header-padding);
+}
+
+.logo img {
+  height: 100%;
+  width: auto;
 }
 
 .header-title {

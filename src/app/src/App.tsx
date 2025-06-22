@@ -183,28 +183,14 @@ function App() {
       <Toaster position="top-center" />
       <header>
         <div className="logo">
-          {/* Placeholder for left logo */}
-          <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="12" fill="#E2001A" />
-            <path d="M30 70V30L50 50L70 30V70L50 50L30 70Z" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M35 50H65" stroke="white" strokeWidth="10" strokeLinecap="round" />
-          </svg>
+          <img src="/logo-mrw.png" alt="MRW" />
         </div>
         <div className="header-title">
           <h1>Vorstoss-Frontend</h1>
           <p>by Marc</p>
         </div>
         <div className="logo">
-          {/* Placeholder for right logo */}
-          <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="48" fill="#E2001A" />
-            <text x="50%" y="52%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold" fontFamily="Arial, sans-serif" transform="rotate(10, 50, 50)">
-              REEL
-            </text>
-            <text x="50%" y="52%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold" fontFamily="Arial, sans-serif" transform="rotate(-170, 50, 50)">
-              AMSY
-            </text>
-          </svg>
+          <img src="/logo-parl.png" alt="Parlament Winterthur" />
         </div>
       </header>
       <main>
