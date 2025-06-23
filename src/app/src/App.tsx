@@ -146,7 +146,10 @@ function App() {
 
   const handleDownloadPdf = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER}/`, {
+      // Use VITE_SERVER for local dev, otherwise use a relative path for production
+      const apiUrl = import.meta.env.VITE_SERVER ?? '/app/v1'
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(formData),

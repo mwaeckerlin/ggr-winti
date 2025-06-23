@@ -1,4 +1,16 @@
-2025-06-19  Marc  <marc@example.com>
+2025-06-22  Marc Wäckerlin
+
+	* Logos im Frontend-Header hinzugefügt (MRW und Parlament Winterthur)
+
+2025-06-20  Marc Wäckerlin
+
+	* Verbesserte Fehlermeldungen bei der PDF-Erstellung im Frontend
+	* Port für das Frontend limitiert (Vite-Server auf Port 5173, strictPort: true)
+	* Spinner-Buttons für Ladeanzeige im Frontend hinzugefügt
+	* Fehlerhafte Dateinamen-Generierung behoben
+	* Diverse kleinere Bugfixes und Verbesserungen
+
+2025-06-19  Marc Wäckerlin
 
 	* Initiale Version der Vorstoss LaTeX-Klasse
 	* Unterstützung für verschiedene Vorstosstypen (Motion, Interpellation, Postulat, Schriftliche Anfrage)

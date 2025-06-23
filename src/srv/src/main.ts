@@ -20,9 +20,10 @@ async function bootstrap() {
       credentials: true,
     })
   } else {
-    console.error('FRONTEND environment variable not set. CORS not enabled.')
+    console.log('CORS not enabled.')
   }
 
+  app.setGlobalPrefix('app/v1')
   app.useGlobalPipes(new ValidationPipe())
   await app.listen(process.env.PORT ?? 3000)
 }

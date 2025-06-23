@@ -7,6 +7,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "clean": "rm -rf dist",
+    "clean:all": "npm run clean && rm -rf node_modules .eslintcache",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -24,6 +26,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/serve-static": "5.0.3",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.2",
     "dotenv": "16.5.0",

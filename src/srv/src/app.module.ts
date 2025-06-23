@@ -1,16 +1,15 @@
-import {Module, NestModule, MiddlewareConsumer} from '@nestjs/common'
-import {AppController} from './app.controller'
-import {AppService} from './app.service'
+import {Module} from '@nestjs/common'
+import {ServeStaticModule} from '@nestjs/serve-static'
 import {PdfModule} from './pdf/pdf.module'
-import {LoggerMiddleware} from './logger.middleware'
+import * as path from 'path'
 
 @Module({
-  imports: [PdfModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', '..', 'app', 'dist'),
+      exclude: ['/app/v1*'],
+    }),
+    PdfModule,
+  ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*')
-  }
-}
+export class AppModule {}

@@ -54,19 +54,7 @@ export class PdfService {
       fs.writeFileSync(latexFile, latexContent)
 
       // 3. Execute pdflatex with TEXINPUTS environment variable
-      const texInputsPath = process.env.TEX_CLASS_PATH
-      if (!texInputsPath || !fs.existsSync(texInputsPath)) {
-        throw new Error(`TEX_CLASS_PATH environment variable is not set or path is invalid: ${texInputsPath}`)
-      }
-
-      const command = `pdflatex -interaction=nonstopmode -output-directory=${this.tempDir} ${latexFile}`
-
-      await execAsync(command, {
-        env: {
-          ...process.env,
-          TEXINPUTS: `${texInputsPath}:`, // The trailing colon tells TeX to also search default paths
-        },
-      })
+      await execAsync(`pdflatex -interaction=nonstopmode -output-directory=${this.tempDir} ${latexFile}`, {env: {...process.env, TEXINPUTS: process.env.TEX_CLASS_PATH?.replace(/$/, ':')}})
 
       // Verify PDF was created
       if (!fs.existsSync(pdfFile)) {
@@ -86,10 +74,7 @@ export class PdfService {
       }
       throw new Error(`PDF generation failed: ${error.message}\n\n--- LaTeX Log ---\n${logContent}`)
     } finally {
-      // Only cleanup if no error occurred to allow for inspection
-      if (!errorOccurred) {
-        this.cleanupTempFiles([latexFile, auxFile, logFile, pdfFile])
-      }
+      this.cleanupTempFiles([latexFile, auxFile, logFile, pdfFile])
     }
   }
 

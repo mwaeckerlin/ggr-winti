@@ -1,0 +1,36 @@
+# Docker-specific files
+Dockerfile
+docker-compose.yaml
+
+# Git history and configuration
+.git
+.gitignore
+
+# Node.js dependencies (reinstalled in Docker stages)
+node_modules
+**/node_modules
+
+# Build artifacts (rebuilt in Docker stages)
+dist
+build
+**/dist
+**/build
+*.log
+npm-debug.log*
+
+# Local environment configuration
+.env
+
+# OS & IDE specific files
+.DS_Store
+.vscode
+.idea
+
+# Documentation / Config
+**/README*
+**/doc
+LICENSE
+ChangeLog
+nest-cli.json
+.prettierrc
+src/app/eslint.config.js 

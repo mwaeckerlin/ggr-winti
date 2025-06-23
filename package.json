@@ -1,6 +1,6 @@
 {
   "name": "ggr-winti",
-  "version": "'0.0.1",
+  "version": "0.0.1",
   "description": "Eine LaTeX-Klasse für parlamentarische Vorstösse (Motionen, Interpellationen, Postulate, Schriftliche Anfragen) im Parlament Winterthur.",
   "private": true,
   "workspaces": [
@@ -11,12 +11,12 @@
   "scripts": {
     "start": "concurrently -k \"npm run start --workspace=@ggr-winti/lib\" \"npm run start --workspace=app\" \"npm run start --workspace=srv\"",
     "start:dev": "concurrently -k \"npm run start:dev -w=@ggr-winti/lib\" \"npm run start:dev -w=app\" \"npm run start:dev -w=srv\"",
-    "build": "npm run build --workspaces",
+    "build": "npm run build:lib && npm run build:srv && npm run build:app",
     "build:lib": "npm run build --workspace=@ggr-winti/lib",
     "build:app": "npm run build --workspace=app",
     "build:srv": "npm run build --workspace=srv",
-    "clean": "npm run clean --workspaces && rm -rf src/app/dist src/srv/dist",
-    "clean:all": "npm run clean && rm -rf node_modules",
+    "clean": "npm run clean --workspaces",
+    "clean:all": "npm run clean:all --workspaces && rm -rf node_modules .turbo .eslintcache",
     "test": "npm test --workspaces --if-present"
   },
   "keywords": [
@@ -30,8 +30,5 @@
   "devDependencies": {
     "concurrently": "9.1.2",
     "prettier": "3.5.3"
-  },
-  "dependencies": {
-    "react-hot-toast": "2.5.2"
   }
 }
