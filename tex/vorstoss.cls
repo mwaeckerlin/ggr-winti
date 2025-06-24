@@ -13,8 +13,11 @@
 \RequirePackage{tabularx}
 \RequirePackage[scaled]{helvet}
 \renewcommand{\familydefault}{\sfdefault}
+\RequirePackage{ifthen}
 
-\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\geometry{left=2.5cm, right=2.5cm, top=3.5cm, bottom=2.5cm}
+\setlength{\headheight}{2cm}
+\setlength{\headsep}{0.5cm}
 
 % Option für den Vorstosstyp
 \newcommand{\vorstosstyp}{}
@@ -42,10 +45,20 @@
 \newcommand{\nummer}[1]{\def\@nummer{#1}}
 \newcommand{\unterstuetzer}[1]{\def\@unterstuetzer{#1}}
 
-% Makros für Antrag und Begründung
-\newcommand{\antrag}{\textbf{Antrag}\par\gdef\@hasantrag{used}}
-\newcommand{\begruendung}{\textbf{Begr\"undung}\par\gdef\@hasbegruendung{used}}
-\newcommand{\titel}{\textbf{Antrag und Begr\"undung}\par}
+% Makros für Antrag und Begründung/EINLEITUNG und FRAGEN je nach Typ
+\newcommand{\antrag}{%
+  \ifthenelse{\equal{\vorstosstyp}{Schriftliche Anfrage}}{\textbf{Einleitung}\par}{\textbf{Antrag}\par}%
+  \gdef\@hasantrag{used}%
+}
+\newcommand{\begruendung}{%
+  \ifthenelse{\equal{\vorstosstyp}{Schriftliche Anfrage}}{\textbf{Fragen}\par}{\textbf{Begr\"undung}\par}%
+  \gdef\@hasbegruendung{used}%
+}
+\newcommand{\titel}{%
+  \ifthenelse{\equal{\vorstosstyp}{Schriftliche Anfrage}}{\textbf{Einleitung und Fragen}\par}{\textbf{Antrag und Begr\"undung}\par}%
+}
+\newcommand{\einleitung}{\antrag}
+\newcommand{\fragen}{\begruendung}
 
 % Defaultwerte
 \def\@betreffend{}
@@ -81,4 +94,8 @@
   \vspace{0.7cm}
   \hrule
   \vspace{0.7cm}
-} 
+}
+
+% Schusterjungen- und Hurenkindregelung
+\clubpenalty=10000
+\widowpenalty=10000 

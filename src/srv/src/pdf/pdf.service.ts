@@ -164,8 +164,8 @@ ${processedText}
     const escapedNummer = this.encodeLatexInput(dto.nummer || '2024.001')
 
     // First, convert HTML-like tags to LaTeX, then escape
-    const processedAntrag = this.encodeLatexInput(this.htmlToLatex(dto.antrag || ''))
-    const processedBegruendung = this.encodeLatexInput(this.htmlToLatex(dto.begruendung || ''))
+    const processedAntrag = this.encodeLatexInput(this.htmlToLatex(dto.einleitung || dto.antrag || ''))
+    const processedBegruendung = this.encodeLatexInput(this.htmlToLatex(dto.fragen || dto.begruendung || ''))
 
     return `\\documentclass[${this.buildClassOptions(dto)}]{vorstoss}
 \\betreffend{${escapedBetreffend}}

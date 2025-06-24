@@ -15,3 +15,4 @@
 2025-06-24  Marc Wäckerlin  <marc.waeckerlin@gmail.com>
 
 	* Docker: PDF-Generation fixed to use /usr/bin/pdflatex without shell, tested and working.
+	* Frontend: Tab-Komponente für getrennt/zusammen, FormGroup-Komponente, alle form-group-Divs ersetzt, Tab-Design mit Variablen, LaTeX-Header und Schusterjungenregelung verbessert.

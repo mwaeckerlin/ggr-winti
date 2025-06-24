@@ -360,3 +360,34 @@ footer {
       width: 100%;
   }
 }
+
+/* =============================================================
+   Tab-Komponente: Umschaltbare Tabs für Formularansichten
+   ============================================================= */
+.tab-container {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+.tab-button {
+  padding: var(--space-2) var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-light);
+  color: var(--color-dark);
+  font-size: var(--font-size-md);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+  font-weight: var(--font-weight-normal);
+}
+.tab-button:not(.active):hover {
+  background: var(--color-secondary);
+}
+.tab-button.active {
+  background: var(--color-light);
+  color: var(--color-dark);
+  border-bottom: var(--border-width) solid var(--color-light);
+  font-weight: var(--font-weight-bold);
+  z-index: 1;
+}

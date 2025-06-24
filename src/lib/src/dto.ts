@@ -54,4 +54,12 @@ export class GeneratePdfDto {
   @IsString()
   @ValidateIf((o) => !o.text && o.antrag)
   begruendung?: string
+
+  @IsOptional()
+  @IsString()
+  einleitung?: string
+
+  @IsOptional()
+  @IsString()
+  fragen?: string
 }

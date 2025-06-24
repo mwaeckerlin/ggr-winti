@@ -2,6 +2,8 @@ import {useState, useRef, useEffect, useMemo} from 'react'
 import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName} from '@ggr-winti/lib'
 import {Toaster, toast} from 'react-hot-toast'
 import Button from './components/Button'
+import Tab from './components/Tab'
+import FormGroup from './components/FormGroup'
 
 function App() {
   // Link-Mode erkennen
@@ -32,6 +34,8 @@ function App() {
   const generatedFileName = useMemo(() => generateFilename(formData), [formData])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [tabIndex, setTabIndex] = useState(0) // 0: Getrennt, 1: Zusammen
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const {name, value, type} = e.target
@@ -201,7 +205,7 @@ function App() {
           <h2 className="form-title">Parlamentarischer Vorstoss</h2>
 
           <div className="form-row form-row-aligned">
-            <div className="form-group">
+            <FormGroup>
               <label htmlFor="vorstosstyp">Typ</label>
               <select id="vorstosstyp" name="vorstosstyp" value={formData.vorstosstyp as string} onChange={handleChange} required disabled={isLinkMode}>
                 {(Object.values(Vorstosstyp) as Vorstosstyp[]).map((typ) => (
@@ -210,53 +214,69 @@ function App() {
                   </option>
                 ))}
               </select>
-            </div>
+            </FormGroup>
             <div className="checkbox-stack">
-              <div className="form-group-checkbox">
+              <FormGroup>
                 <input type="checkbox" id="dringlich" name="dringlich" checked={formData.dringlich} onChange={handleChange} disabled={isLinkMode} />
                 <label htmlFor="dringlich">Dringlich</label>
-              </div>
-              <div className="form-group-checkbox">
+              </FormGroup>
+              <FormGroup>
                 <input type="checkbox" id="budget" name="budget" checked={formData.budget} onChange={handleChange} disabled={isLinkMode} />
                 <label htmlFor="budget">Budget</label>
-              </div>
+              </FormGroup>
             </div>
           </div>
 
-          <div className="form-group">
+          <FormGroup>
             <label htmlFor="betreffend">Betreff</label>
             <input type="text" id="betreffend" name="betreffend" value={formData.betreffend} onChange={handleChange} required disabled={isLinkMode} />
-          </div>
+          </FormGroup>
 
-          <div className="form-group">
+          <FormGroup>
             <label htmlFor="eingereichtvon">Eingereicht von</label>
             <input type="text" id="eingereichtvon" name="eingereichtvon" value={formData.eingereichtvon} onChange={handleChange} required disabled={isLinkMode} />
-          </div>
+          </FormGroup>
 
           <div className="form-row">
-            <div className="form-group">
+            <FormGroup>
               <label htmlFor="datum">Datum</label>
               <input type="date" id="datum" name="datum" value={formData.datum} onChange={handleChange} disabled={false} />
-            </div>
-            <div className="form-group">
+            </FormGroup>
+            <FormGroup>
               <label htmlFor="nummer">Geschäfts-Nr.</label>
               <input type="text" id="nummer" name="nummer" value={formData.nummer} onChange={handleChange} disabled={!isLinkMode} />
-            </div>
-            <div className="form-group">
+            </FormGroup>
+            <FormGroup>
               <label htmlFor="unterstuetzer">Anz. Unterstützer</label>
               <input type="number" id="unterstuetzer" name="unterstuetzer" value={formData.unterstuetzer} onChange={handleChange} min="0" disabled={!isLinkMode} />
-            </div>
+            </FormGroup>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="antrag">Antrag</label>
-            <textarea id="antrag" name="antrag" value={formData.antrag} onChange={handleChange} rows={4} disabled={isLinkMode}></textarea>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="begruendung">Begründung</label>
-            <textarea id="begruendung" name="begruendung" value={formData.begruendung} onChange={handleChange} rows={8} disabled={isLinkMode}></textarea>
-          </div>
+          {/* ===================== Felder je nach Tab ===================== */}
+          <FormGroup>
+            <Tab
+              tabs={["Antrag & Begründung getrennt", "Beides zusammen (Freitext)"]}
+              selectedTab={tabIndex}
+              onTabChange={setTabIndex}
+            />
+            {tabIndex === 0 ? (
+              <>
+                <FormGroup>
+                  <label htmlFor="antrag">{formData.vorstosstyp === Vorstosstyp.ANFRAGE ? 'Einleitung' : 'Antrag'}</label>
+                  <textarea id="antrag" name="antrag" value={formData.antrag} onChange={handleChange} rows={8} disabled={isLinkMode}></textarea>
+                </FormGroup>
+                <FormGroup>
+                  <label htmlFor="begruendung">{formData.vorstosstyp === Vorstosstyp.ANFRAGE ? 'Fragen' : 'Begründung'}</label>
+                  <textarea id="begruendung" name="begruendung" value={formData.begruendung} onChange={handleChange} rows={16} disabled={isLinkMode}></textarea>
+                </FormGroup>
+              </>
+            ) : (
+              <FormGroup>
+                <label htmlFor="text">{formData.vorstosstyp === Vorstosstyp.ANFRAGE ? 'Einleitung und Fragen (Freitext)' : 'Antrag und Begründung (Freitext)'}</label>
+                <textarea id="text" name="text" value={formData.text || ''} onChange={handleChange} rows={27} disabled={isLinkMode}></textarea>
+              </FormGroup>
+            )}
+          </FormGroup>
         </form>
         <input type="file" accept="application/json" style={{display: 'none'}} ref={fileInputRef} />
       </main>
