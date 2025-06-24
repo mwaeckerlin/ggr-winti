@@ -1,6 +1,10 @@
-# Vorstoss LaTeX-Klasse
+# Vorstoss LaTeX-Klasse und Service
 
-Eine LaTeX-Klasse für parlamentarische Vorstösse (Motionen, Interpellationen, Postulate, Schriftliche Anfragen) im Parlament Winterthur.
+Dieses Projekt ist mehr als nur eine LaTeX-Klasse für parlamentarische Vorstösse (Motionen, Interpellationen, Postulate, Schriftliche Anfragen) im Parlament Winterthur:
+
+- **LaTeX-Klasse:** Kann auch eigenständig für die manuelle Dokumentenerstellung genutzt werden.
+- **Web-Service:** Die LaTeX-Klasse ist in einen Service mit Web-Frontend und API eingebettet. Damit können Vorstösse bequem im Browser ausgefüllt, als PDF generiert und heruntergeladen werden.
+- **API:** Automatisierte PDF-Erstellung und Integration in andere Systeme ist über die bereitgestellte Schnittstelle möglich.
 
 ## Zweck
 
@@ -216,15 +220,35 @@ import {a, b} from 'modulename'
 // ✅ Korrekt - Arrow-Funktion bevorzugt, klar und ausdrucksstark
 const sum = (a, b) => a + b
 const isEven = n => n % 2 === 0
-const logIfPositive = n => { if (n > 0) console.log(n) }
+const logIfPositive = n => {if (n > 0) console.log(n)}
 ```
 
 ### LaTeX
 
+- **Immer UTF-8**: Immer UTF-8 als Zeichencodierung verwenden.
 - **Konsistente Einrückung**: 2 Leerzeichen pro Ebene
 - **Leerzeilen**: Zwischen logischen Abschnitten
 - **Kommentare**: `% Kommentar` mit Leerzeichen nach %
 
+### Regeln für die KI
+
+Dieses Projekt ist 100% mit KI erstellt und nicht von Hand codiert.
+
+- Halte dich immer an die Regeln und die Corierrichtlichnien, es sei denn der Befehl lautet anders.
+- Dieses Projekt ist deutsch, daher verwende hier Deutsch.
+- Fasse dich kurz und nutze keine Floskeln.
+- Antworte wenn möglich in nur einem Satz.
+- ChangeLog-Zeilen nur bei wesentlichen größeren Änderungen. Mindestens eine Zeile, maximal 5, nur bei vielen wichtigen Änderungen mehr.
+- Führe Schritte aus einem Befehl ungefragt aus, es sei denn ich stelle eine Frage, dann antworte nur auf die Frage.
+- Mache immer automatischen Änderungen, frage nie nach Bestätigung.
+- Nutze Shell-Befehle, wenn notwendig, auch hier ohne Bestätigung.
+- Immer machen, niemals fragen!
+- Kommentiere Code nur wo notwendig, dann aber knapp und verständlich.
+- Äussere niemals Vermutungen, analisiere immer den Code, die Ausgabe, die Umgebung.
+- Wenn du etwas weisst und nicht herausfinden kannst, dann vermute nicht, sondern stelle Fragen. Wenn du es dann immer noch nicht weisst, sag, dass du es nicht weisst, stelle niemals Vermutungen an, liefere nur Fakten und Analysen.
+
 ## Lizenz
 
-Diese LaTeX-Klasse steht unter der MIT-Lizenz zur freien Verfügung. 
+Diese LaTeX-Klasse steht unter der MIT-Lizenz zur freien Verfügung.
+
+- Entferne unnütze Beispiele (z.B. Hello World, Default-Controller, Dummy-Content) immer sofort nach der Installation.

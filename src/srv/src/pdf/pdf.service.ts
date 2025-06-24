@@ -1,5 +1,5 @@
 import {Injectable} from '@nestjs/common'
-import {exec} from 'child_process'
+import {exec, spawn} from 'child_process'
 import {promisify} from 'util'
 import {GeneratePdfDto, encodeLatexInput, htmlToLatex} from '@ggr-winti/lib'
 import * as fs from 'fs'
@@ -10,7 +10,7 @@ const execAsync = promisify(exec)
 
 @Injectable()
 export class PdfService {
-  private readonly tempDir = '/tmp/vorstoss-pdf'
+  private readonly tempDir = '/tmp/ggr-winti/vorstoss-pdf'
 
   // Instanzmethoden für Testbarkeit
   encodeLatexInput = encodeLatexInput
@@ -18,9 +18,7 @@ export class PdfService {
 
   constructor() {
     // Delete and recreate temp directory to ensure clean state
-    if (fs.existsSync(this.tempDir)) {
-      fs.rmSync(this.tempDir, {recursive: true, force: true})
-    }
+    if (fs.existsSync(this.tempDir)) fs.rmSync(this.tempDir, {recursive: true, force: true})
     fs.mkdirSync(this.tempDir, {recursive: true})
     // Cleanup old temporary files on startup
     this.cleanupOldTempFiles()
@@ -53,8 +51,26 @@ export class PdfService {
       // 2. Write the final LaTeX file
       fs.writeFileSync(latexFile, latexContent)
 
-      // 3. Execute pdflatex with TEXINPUTS environment variable
-      await execAsync(`pdflatex -interaction=nonstopmode -output-directory=${this.tempDir} ${latexFile}`, {env: {...process.env, TEXINPUTS: process.env.TEX_CLASS_PATH?.replace(/$/, ':')}})
+      // 3. Execute pdflatex with TEXINPUTS environment variable (ohne shell)
+      await new Promise<void>((resolve, reject) => {
+        const pdflatex = spawn(
+          '/usr/bin/pdflatex',
+          ['-interaction=nonstopmode', `-output-directory=${this.tempDir}`, latexFile],
+          {
+            env: { ...process.env, TEXINPUTS: process.env.TEX_CLASS_PATH?.replace(/$/, ':') },
+            stdio: ['ignore', 'pipe', 'pipe'],
+          }
+        )
+        const logStream = fs.createWriteStream(logFile)
+        pdflatex.stdout.pipe(logStream)
+        pdflatex.stderr.pipe(logStream)
+        pdflatex.on('error', (err) => reject(err))
+        pdflatex.on('exit', (code) => {
+          logStream.end()
+          if (code === 0) resolve()
+          else reject(new Error(`pdflatex exited with code ${code}`))
+        })
+      })
 
       // Verify PDF was created
       if (!fs.existsSync(pdfFile)) {

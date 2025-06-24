@@ -5,27 +5,13 @@
 2025-06-20  Marc Wäckerlin
 
 	* Verbesserte Fehlermeldungen bei der PDF-Erstellung im Frontend
-	* Port für das Frontend limitiert (Vite-Server auf Port 5173, strictPort: true)
-	* Spinner-Buttons für Ladeanzeige im Frontend hinzugefügt
 	* Fehlerhafte Dateinamen-Generierung behoben
 	* Diverse kleinere Bugfixes und Verbesserungen
 
 2025-06-19  Marc Wäckerlin
 
 	* Initiale Version der Vorstoss LaTeX-Klasse
-	* Unterstützung für verschiedene Vorstosstypen (Motion, Interpellation, Postulat, Schriftliche Anfrage)
-	* Automatische Kopfzeile mit Logo
-	* Metadaten-Felder (\betreffend, \eingereichtvon, \datum, \nummer, \unterstuetzer)
-	* Makros für Titel (\antrag, \begruendung, \titel)
-	* Standardisierte Formatierung nach parlamentarischen Konventionen
-	* Deutsche Lokalisierung mit babel und ngerman
-	* Helvetica-Schriftart als Standard
-	* Automatische Seitenformatierung (A4, 12pt)
-	* Horizontale Trennlinie zwischen Metadaten und Inhalt
-	* Beispiel-Dokument (sample.tex)
-	* Umfassende Dokumentation (README.md)
-	* MIT-Lizenz
-	* Dringlich-Option für alle Vorstosstypen hinzugefügt
-	* Grammatikalische Anpassung für dringlich-Formulierung (Dringliches Postulat, Dringlicher Beschlussantrag)
-	* Budget-Option für alle Vorstosstypen hinzugefügt
-	* Neue Vorstosstypen: Beschlussantrag und Parlamentarische Initiative
+
+2025-06-24  Marc Wäckerlin  <marc.waeckerlin@gmail.com>
+
+	* Docker: PDF-Generation fixed to use /usr/bin/pdflatex without shell, tested and working.

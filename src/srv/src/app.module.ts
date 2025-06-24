@@ -6,8 +6,8 @@ import * as path from 'path'
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', '..', 'app', 'dist'),
-      exclude: ['/app/v1*'],
+      rootPath: path.join(__dirname, 'app'),
+      exclude: ['/app/v1']
     }),
     PdfModule,
   ],
