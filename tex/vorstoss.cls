@@ -94,7 +94,7 @@
   \vspace{0.7cm}
   \hrule
   \vspace{0.7cm}
-}
+} 
 
 % Schusterjungen- und Hurenkindregelung
 \clubpenalty=10000

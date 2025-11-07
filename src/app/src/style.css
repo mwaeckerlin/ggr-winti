@@ -14,6 +14,9 @@
   --color-border: #E0E0E0;
   --color-disabled: #999;
   --color-light-transparent: rgba(255, 255, 255, 0.3);
+  --color-success: #4CAF50;
+  --color-success-contrast: #FFFFFF;
+  --color-delete: #C00;
 
   /* ------------------------------
    * Font System
@@ -390,4 +393,95 @@ footer {
   border-bottom: var(--border-width) solid var(--color-light);
   font-weight: var(--font-weight-bold);
   z-index: 1;
+}
+
+/* =============================================================
+   Miteinreicher UI (ohne Inline-Styles)
+   ============================================================= */
+
+.hidden {
+  display: none !important;
+}
+
+.muted {
+  font-size: var(--font-size-sm);
+  color: var(--color-disabled);
+  font-style: italic;
+}
+
+/* Linke Liste: klickbare Auswahl */
+.selectable-list {
+  border: var(--border-width) solid var(--color-border);
+  padding: var(--space-2);
+  max-height: 10em;
+  overflow-y: auto;
+  background-color: var(--color-light);
+  border-radius: var(--border-radius-sm);
+}
+
+.selectable-list.is-readonly {
+  background-color: var(--color-secondary);
+}
+
+.selectable-item {
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: var(--space-1);
+  user-select: none;
+}
+
+.selectable-item:last-child {
+  margin-bottom: 0;
+}
+
+.selectable-item.selected {
+  background-color: var(--color-success);
+  color: var(--color-success-contrast);
+}
+
+.selectable-item.disabled {
+  cursor: default;
+}
+
+/* Rechte Liste: Reihenfolge */
+.order-list {
+  font-size: var(--font-size-sm);
+}
+
+.order-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: var(--space-2);
+  align-items: stretch;
+  margin-bottom: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+}
+
+.order-row__index {
+  font-weight: var(--font-weight-bold);
+  min-width: 2em;
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-2);
+}
+
+.order-row__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+.order-row__btn {
+  min-width: 2.5em;
+  padding: 0.5em; /* use em so it scales with font-size */
+  height: 100%;
+}
+
+.order-row__btn--danger {
+  color: var(--color-delete);
 }

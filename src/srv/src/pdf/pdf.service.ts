@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common'
 import {exec, spawn} from 'child_process'
 import {promisify} from 'util'
-import {GeneratePdfDto, encodeLatexInput, htmlToLatex} from '@ggr-winti/lib'
+import {GeneratePdfDto, encodeLatexInput, htmlToLatex, memberToLatex} from '@ggr-winti/lib'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
@@ -81,6 +81,7 @@ export class PdfService {
         success: true,
         pdf: fs.readFileSync(pdfFile),
         message: 'PDF generated successfully',
+        miteinreicher: dto.miteinreicher || []
       }
     } catch (error) {
       errorOccurred = true
@@ -135,16 +136,19 @@ export class PdfService {
   }
 
   private generateLatexWithTitle(dto: GeneratePdfDto): string {
-    const escapedBetreffend = this.encodeLatexInput(dto.betreffend || 'Vorstoss')
-    const escapedEingereichtvon = this.encodeLatexInput(dto.eingereichtvon || 'System')
-    const escapedNummer = this.encodeLatexInput(dto.nummer || '2024.001')
+  const escapedBetreffend = this.encodeLatexInput(dto.betreffend || 'Vorstoss')
+  let eingereichtvon = dto.eingereichtvon ? memberToLatex(dto.eingereichtvon as any) : encodeLatexInput('System')
+  if (dto.miteinreicher && dto.miteinreicher.length) {
+    eingereichtvon += ', ' + dto.miteinreicher.map((m) => memberToLatex(m as any)).join(', ')
+  }
+  const escapedNummer = this.encodeLatexInput(dto.nummer || '2024.001')
 
-    // First, convert HTML-like tags to LaTeX, then escape the entire text
-    const processedText = this.encodeLatexInput(this.htmlToLatex(dto.text || ''))
+  // First, convert HTML-like tags to LaTeX, then escape the entire text
+  const processedText = this.encodeLatexInput(this.htmlToLatex(dto.text || ''))
 
-    return `\\documentclass[${this.buildClassOptions(dto)}]{vorstoss}
+  return `\\documentclass[${this.buildClassOptions(dto)}]{vorstoss}
 \\betreffend{${escapedBetreffend}}
-\\eingereichtvon{${escapedEingereichtvon}}
+\\eingereichtvon{${eingereichtvon}}
 \\datum{${dto.datum || '\\today'}}
 \\nummer{${escapedNummer}}
 \\unterstuetzer{${dto.unterstuetzer || 1}}
@@ -159,17 +163,20 @@ ${processedText}
   }
 
   private generateLatexWithAntragBegruendung(dto: GeneratePdfDto): string {
-    const escapedBetreffend = this.encodeLatexInput(dto.betreffend || 'Vorstoss')
-    const escapedEingereichtvon = this.encodeLatexInput(dto.eingereichtvon || 'System')
-    const escapedNummer = this.encodeLatexInput(dto.nummer || '2024.001')
+  const escapedBetreffend = this.encodeLatexInput(dto.betreffend || 'Vorstoss')
+  let eingereichtvon = dto.eingereichtvon ? memberToLatex(dto.eingereichtvon as any) : encodeLatexInput('System')
+  if (dto.miteinreicher && dto.miteinreicher.length) {
+    eingereichtvon += ', ' + dto.miteinreicher.map((m) => memberToLatex(m as any)).join(', ')
+  }
+  const escapedNummer = this.encodeLatexInput(dto.nummer || '2024.001')
 
-    // First, convert HTML-like tags to LaTeX, then escape
-    const processedAntrag = this.encodeLatexInput(this.htmlToLatex(dto.einleitung || dto.antrag || ''))
-    const processedBegruendung = this.encodeLatexInput(this.htmlToLatex(dto.fragen || dto.begruendung || ''))
+  // First, convert HTML-like tags to LaTeX, then escape
+  const processedAntrag = this.encodeLatexInput(this.htmlToLatex(dto.einleitung || dto.antrag || ''))
+  const processedBegruendung = this.encodeLatexInput(this.htmlToLatex(dto.fragen || dto.begruendung || ''))
 
-    return `\\documentclass[${this.buildClassOptions(dto)}]{vorstoss}
+  return `\\documentclass[${this.buildClassOptions(dto)}]{vorstoss}
 \\betreffend{${escapedBetreffend}}
-\\eingereichtvon{${escapedEingereichtvon}}
+\\eingereichtvon{${eingereichtvon}}
 \\datum{${dto.datum || '\\today'}}
 \\nummer{${escapedNummer}}
 \\unterstuetzer{${dto.unterstuetzer || 1}}

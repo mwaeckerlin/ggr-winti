@@ -23,7 +23,7 @@ async function bootstrap() {
     console.log('CORS not enabled.')
   }
 
-  app.setGlobalPrefix('app/v1')
+  app.setGlobalPrefix('api/v1')
   app.useGlobalPipes(new ValidationPipe())
   await app.listen(process.env.PORT ?? 3000)
 }

@@ -187,6 +187,31 @@ sudo dnf install texlive-lang-german
 
 ## Codierrichtlinien
 
+- Berücksichtige die Projektstruktur:
+  - /aux → Hilfsanwendungen, Beispiele, Experimemtiercode
+  - /bin → Skripte
+  - /doc → Dokumentation
+  - /etc → Applikationskonfigurationen
+  - /src → Source Code der Anwendung
+    - /src/app → Frontend(s)
+    - /src/srv → Backend(s)
+    - /src/lib → Libraries (i.d.R. gemeinsam in Frontend und Backend genutzt)
+  - Nutze folgende Technologien:
+    - NPM Workspaces
+    - Typescript
+    - PostgreSQL
+    - Kafka
+    - Redis
+    - ReactJS
+    - Redux
+    - Stylus
+    - NestJS
+  - Schreibe Tests mit Jest (Unit) und Playwright (End-to-End)
+  - Verwende interne Bibliotheken und Hilfsfunktionen; schlage neue Bibliotheken nur vor, wenn nötig
+  - Rate nie, sondern analysiere immer den Code und die Projektdateien, bevor du Änderungen vornimmst
+  - Verstehe und analysiere stets alle Projektdateien bei Änderungen
+  - Strukturiere den Code wo sinnvoll für bessere Lesbarkeit mit Zeilenumbruch
+
 ### TypeScript/JavaScript
 
 - **Keine unnötigen Semikolons**: Semikolons nur verwenden, wenn sie syntaktisch erforderlich sind
@@ -246,6 +271,9 @@ Dieses Projekt ist 100% mit KI erstellt und nicht von Hand codiert.
 - Kommentiere Code nur wo notwendig, dann aber knapp und verständlich.
 - Äussere niemals Vermutungen, analisiere immer den Code, die Ausgabe, die Umgebung.
 - Wenn du etwas weisst und nicht herausfinden kannst, dann vermute nicht, sondern stelle Fragen. Wenn du es dann immer noch nicht weisst, sag, dass du es nicht weisst, stelle niemals Vermutungen an, liefere nur Fakten und Analysen.
+- Wenn ein Test fehlschlägt, darf die Testannahme (z.B. erwartete Werte) nur nach Rücksprache mit dem Nutzer geändert werden. Ansonsten ist IMMER der Code so zu ändern, dass die Annahmen erfüllt werden.
+- Teste immer mit den Default-Parametern (z.B. 60 Mitglieder).
+- Lies und befolge alle Regeln IMMER.
 
 ## Lizenz
 

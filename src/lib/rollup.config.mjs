@@ -12,10 +12,13 @@ export default [
     },
     plugins: [
       nodeResolve(),
-      commonjs(),
+      commonjs({
+        transformMixedEsModules: true,
+        requireReturnsDefault: 'auto'
+      }),
       typescript({ tsconfig: './tsconfig.json' })
     ],
-    external: []
+    external: ['class-validator', 'class-transformer']
   },
   {
     input: 'src/index.ts',
@@ -26,9 +29,12 @@ export default [
     },
     plugins: [
       nodeResolve(),
-      commonjs(),
+      commonjs({
+        transformMixedEsModules: true,
+        requireReturnsDefault: 'auto'
+      }),
       typescript({ tsconfig: './tsconfig.json' })
     ],
-    external: []
+    external: ['class-validator', 'class-transformer']
   }
 ] 

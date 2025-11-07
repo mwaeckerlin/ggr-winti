@@ -30,7 +30,7 @@ jest.mock('./pdf.service', () => {
 
 import {Test, TestingModule} from '@nestjs/testing'
 import {PdfService} from './pdf.service'
-import {GeneratePdfDto, Vorstosstyp} from './dto/generate-pdf.dto'
+import {GeneratePdfDto, Vorstosstyp} from '@ggr-winti/lib'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -185,7 +185,7 @@ describe('PdfService', () => {
       expect(result).toBe('beschlussantrag,dringlich,budget')
     })
     it('should return empty string when no options', () => {
-      const dto: GeneratePdfDto = {text: 'test'}
+      const dto: GeneratePdfDto = {text: 'test', vorstosstyp: Vorstosstyp.MOTION}
       const result = service['buildClassOptions'](dto)
       expect(result).toBe('')
     })

@@ -9,7 +9,7 @@
     "src/srv"
   ],
   "scripts": {
-    "start": "concurrently -k \"npm run start --workspace=@ggr-winti/lib\" \"npm run start --workspace=app\" \"npm run start --workspace=srv\"",
+    "start": "concurrently -k \"npm run start:dev --workspace=@ggr-winti/lib\" \"npm run start --workspace=app\" \"npm run start --workspace=srv\"",
     "start:dev": "concurrently -k \"npm run start:dev -w=@ggr-winti/lib\" \"npm run start:dev -w=app\" \"npm run start:dev -w=srv\"",
     "build": "npm run build:lib && npm run build:srv && npm run build:app",
     "build:lib": "npm run build --workspace=@ggr-winti/lib",
@@ -17,7 +17,7 @@
     "build:srv": "npm run build --workspace=srv",
     "clean": "npm run clean --workspaces",
     "clean:all": "npm run clean:all --workspaces && rm -rf node_modules .turbo .eslintcache",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm run test --workspace=srv"
   },
   "keywords": [
     "latex",
@@ -30,5 +30,10 @@
   "devDependencies": {
     "concurrently": "9.1.2",
     "prettier": "3.5.3"
+  },
+  "dependencies": {
+    "axios": "1.10.0",
+    "cheerio": "1.1.0",
+    "node-cron": "4.1.1"
   }
 }

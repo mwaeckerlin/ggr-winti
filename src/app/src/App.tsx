@@ -1,5 +1,6 @@
 import {useState, useRef, useEffect, useMemo} from 'react'
-import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName} from '@ggr-winti/lib'
+import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName, memberToLabel} from '@ggr-winti/lib'
+import type { Member } from '@ggr-winti/lib'
 import {Toaster, toast} from 'react-hot-toast'
 import Button from './components/Button'
 import Tab from './components/Tab'
@@ -10,17 +11,23 @@ function App() {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const isLinkMode = searchParams?.has('file')
 
-  // Eigener Name aus localStorage holen
-  const getDefaultName = () => {
+  // Eigener Ersteinreicher aus localStorage holen
+  const getDefaultMember = (): Member | null => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('vorstoss-frontend-eigener-name') || ''
+      const stored = localStorage.getItem('vorstoss-frontend-eigener-name')
+      if (stored) {
+        try {
+          return JSON.parse(stored) as Member
+        } catch {
+          return null
+        }
+      }
     }
-    return ''
+    return null
   }
 
   const [formData, setFormData] = useState<GeneratePdfDto>({
     betreffend: '',
-    eingereichtvon: getDefaultName(),
     datum: formatDate(new Date()),
     nummer: '',
     vorstosstyp: Vorstosstyp.INTERPELLATION,
@@ -37,15 +44,12 @@ function App() {
 
   const [tabIndex, setTabIndex] = useState(0) // 0: Getrennt, 1: Zusammen
 
+  const [mitglieder, setMitglieder] = useState<Member[]>([])
+  const [ersteinreicher, setErsteinreicher] = useState<Member | null>(null)
+  const [miteinreicher, setMiteinreicher] = useState<Member[]>([])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const {name, value, type} = e.target
-    if (name === 'eingereichtvon') {
-      // Speichere den Teil vor dem ersten Komma als eigenen Namen
-      const ownName = value.split(',')[0].trim()
-      if (ownName) {
-        localStorage.setItem('vorstoss-frontend-eigener-name', ownName)
-      }
-    }
     if (type === 'checkbox') {
       const {checked} = e.target as HTMLInputElement
       setFormData((prev: GeneratePdfDto) => ({...prev, [name]: checked}))
@@ -91,6 +95,22 @@ function App() {
           try {
             const json = JSON.parse(e.target?.result as string)
             setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
+
+            setErsteinreicher(json.eingereichtvon)
+            setMiteinreicher(Array.isArray(json.miteinreicher) ? json.miteinreicher : [])
+
+            // Ergänze fehlende Mitglieder in der Liste
+            const neue = [json.eingereichtvon, ...(json.miteinreicher || [])]
+              .filter((m) => m && (m.vorname || m.name)) // Filter leere Objekte
+            if (neue.length) {
+              setMitglieder((prev) => {
+                const exists = new Set(prev.map((m) => `${m.vorname}||${m.name}||${m.partei}`))
+                const toAdd = (neue as Member[])
+                  .filter((m) => !exists.has(`${m.vorname}||${m.name}||${m.partei}`))
+                  .map((m) => ({ vorname: m.vorname || '', name: m.name || '', partei: m.partei || '' }))
+                return [...toAdd, ...prev]
+              })
+            }
             resolve()
           } catch (err) {
             toast.error('Ungültige Datei.')
@@ -121,24 +141,62 @@ function App() {
         try {
           const json = JSON.parse(decodeURIComponent(escape(atob(fileParam))))
           setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
+          setErsteinreicher(json.eingereichtvon)
+          setMiteinreicher(Array.isArray(json.miteinreicher) ? json.miteinreicher : [])
+          if (typeof json.tabIndex === 'number') setTabIndex(json.tabIndex)
         } catch (err) {
           toast.error('Die Daten aus dem Link konnten nicht geladen werden.')
         }
       } else if (!formData.eingereichtvon) {
-        // wie bisher: eigenen Namen aus localStorage setzen
-        const ownName = getDefaultName()
-        if (ownName) {
-          setFormData((prev: GeneratePdfDto) => ({...prev, eingereichtvon: ownName}))
+        // wie bisher: eigenen Ersteinreicher aus localStorage setzen
+        const defaultMember = getDefaultMember()
+        if (defaultMember) {
+          setErsteinreicher(defaultMember)
         }
       }
     }
     // eslint-disable-next-line
   }, [])
 
+  useEffect(() => {
+    fetch('/api/v1/mitglieder')
+      .then((res) => res.json())
+      .then((data) => {
+        // data: { [partei]: [{ vorname, name }] }
+        const flat: Member[] = []
+        Object.entries(data).forEach(([partei, arr]: [string, any]) => {
+          arr.forEach((m: any) => {
+            // Nur vorname, name, partei behalten
+            flat.push({
+              vorname: m.vorname || '',
+              name: m.name || '',
+              partei: partei || ''
+            })
+          })
+        })
+        setMitglieder(flat)
+      })
+  }, [])
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      eingereichtvon: ersteinreicher || undefined,
+      miteinreicher: miteinreicher.length > 0 ? miteinreicher : undefined,
+      unterstuetzer: miteinreicher.length + (ersteinreicher ? 1 : 0),
+    }))
+  }, [ersteinreicher, miteinreicher])
+
   const handleCopyLink = async () => {
     try {
-      // JSON serialisieren und base64-encodieren
-      const jsonString = JSON.stringify(formData)
+      // Frisches Objekt mit allen Feldern bauen
+      const fullData = {
+        ...formData,
+        eingereichtvon: ersteinreicher || undefined,
+        miteinreicher: miteinreicher.length > 0 ? miteinreicher : undefined,
+        unterstuetzer: miteinreicher.length + (ersteinreicher ? 1 : 0),
+      }
+      const jsonString = JSON.stringify(fullData)
       const base64 = btoa(unescape(encodeURIComponent(jsonString)))
       const url = `${window.location.origin}${window.location.pathname}?file=${base64}`
       await navigator.clipboard.writeText(url)
@@ -151,7 +209,7 @@ function App() {
   const handleDownloadPdf = async () => {
     try {
       // Use VITE_SERVER for local dev, otherwise use a relative path for production
-      const apiUrl = import.meta.env.VITE_SERVER ?? '/app/v1'
+      const apiUrl = import.meta.env.VITE_SERVER ?? '/api/v1'
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -232,10 +290,135 @@ function App() {
             <input type="text" id="betreffend" name="betreffend" value={formData.betreffend} onChange={handleChange} required disabled={isLinkMode} />
           </FormGroup>
 
-          <FormGroup>
-            <label htmlFor="eingereichtvon">Eingereicht von</label>
-            <input type="text" id="eingereichtvon" name="eingereichtvon" value={formData.eingereichtvon} onChange={handleChange} required disabled={isLinkMode} />
-          </FormGroup>
+          <div className="form-row">
+            <FormGroup>
+              <label htmlFor="ersteinreicher">Ersteinreicher</label>
+              <select
+                  id="ersteinreicher"
+                  name="ersteinreicher"
+                  value={ersteinreicher ? JSON.stringify(ersteinreicher) : ''}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (!val) {
+                      setErsteinreicher(null)
+                      localStorage.removeItem('vorstoss-frontend-eigener-name')
+                      return
+                    }
+                    const obj = JSON.parse(val) as Member
+                    setErsteinreicher(obj)
+                    // Speichere Member-Objekt in localStorage
+                    localStorage.setItem('vorstoss-frontend-eigener-name', JSON.stringify(obj))
+                    setMiteinreicher((prev) => prev.filter((m) => JSON.stringify(m) !== val))
+                  }}
+                  required
+                  disabled={isLinkMode}
+                >
+                  <option value="">Bitte wählen</option>
+                  {mitglieder.map((m) => {
+                    const label = memberToLabel(m)
+                    return (
+                      <option key={label} value={JSON.stringify(m)}>
+                        {label}
+                      </option>
+                    )
+                  })}
+                </select>
+            </FormGroup>
+          </div>
+
+          <div className="form-row">
+            {!isLinkMode && (
+              <FormGroup>
+                <label>Miteinreicher (klicken zum auswählen/abwählen)</label>
+                <div className="selectable-list">
+                  {mitglieder
+                    .filter((m) => (ersteinreicher ? JSON.stringify(m) !== JSON.stringify(ersteinreicher) : true))
+                    .map((m) => {
+                      const label = memberToLabel(m)
+                      const isSelected = miteinreicher.some((sel) => JSON.stringify(sel) === JSON.stringify(m))
+                      return (
+                        <div
+                          key={label}
+                          className={`selectable-item ${isSelected ? 'selected' : ''}`}
+                          onClick={() => {
+                            if (isSelected) {
+                              setMiteinreicher((prev) => prev.filter((sel) => JSON.stringify(sel) !== JSON.stringify(m)))
+                            } else {
+                              setMiteinreicher((prev) => [...prev, m])
+                            }
+                          }}
+                        >
+                          {isSelected ? '✓ ' : ''}{label}
+                        </div>
+                      )
+                    })}
+                </div>
+              </FormGroup>
+            )}
+            <FormGroup>
+              <label>{isLinkMode ? 'Miteinreicher' : 'Reihenfolge der Miteinreicher'}</label>
+              {miteinreicher.length > 0 ? (
+                <div className="order-list">
+                  {miteinreicher.map((m, idx) => (
+                    <div
+                      key={idx}
+                      className="order-row"
+                    >
+                      <div className="order-row__index">
+                        {idx + 1}.
+                      </div>
+                      <div className="order-row__name">
+                        {memberToLabel(m)}
+                      </div>
+                      {!isLinkMode && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (idx > 0) {
+                                const newList = [...miteinreicher]
+                                ;[newList[idx - 1], newList[idx]] = [newList[idx], newList[idx - 1]]
+                                setMiteinreicher(newList)
+                              }
+                            }}
+                            disabled={idx === 0}
+                            className="order-row__btn"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (idx < miteinreicher.length - 1) {
+                                const newList = [...miteinreicher]
+                                ;[newList[idx], newList[idx + 1]] = [newList[idx + 1], newList[idx]]
+                                setMiteinreicher(newList)
+                              }
+                            }}
+                            disabled={idx === miteinreicher.length - 1}
+                            className="order-row__btn"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMiteinreicher((prev) => prev.filter((_, i) => i !== idx))
+                            }}
+                            className="order-row__btn order-row__btn--danger"
+                          >
+                            ✕
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">Keine Miteinreicher ausgewählt</p>
+              )}
+            </FormGroup>
+          </div>
 
           <div className="form-row">
             <FormGroup>
@@ -246,19 +429,17 @@ function App() {
               <label htmlFor="nummer">Geschäfts-Nr.</label>
               <input type="text" id="nummer" name="nummer" value={formData.nummer} onChange={handleChange} disabled={!isLinkMode} />
             </FormGroup>
-            <FormGroup>
-              <label htmlFor="unterstuetzer">Anz. Unterstützer</label>
-              <input type="number" id="unterstuetzer" name="unterstuetzer" value={formData.unterstuetzer} onChange={handleChange} min="0" disabled={!isLinkMode} />
-            </FormGroup>
           </div>
 
           {/* ===================== Felder je nach Tab ===================== */}
           <FormGroup>
-            <Tab
-              tabs={["Antrag & Begründung getrennt", "Beides zusammen (Freitext)"]}
-              selectedTab={tabIndex}
-              onTabChange={setTabIndex}
-            />
+            {!isLinkMode && (
+              <Tab
+                tabs={["Antrag & Begründung getrennt", "Beides zusammen (Freitext)"]}
+                selectedTab={tabIndex}
+                onTabChange={setTabIndex}
+              />
+            )}
             {tabIndex === 0 ? (
               <>
                 <FormGroup>
@@ -278,7 +459,7 @@ function App() {
             )}
           </FormGroup>
         </form>
-        <input type="file" accept="application/json" style={{display: 'none'}} ref={fileInputRef} />
+  <input type="file" accept="application/json" className="hidden" ref={fileInputRef} />
       </main>
       <footer>
         <Button onClick={handleUploadClick}>JSON hochladen</Button>

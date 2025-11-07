@@ -1,4 +1,4 @@
-import {GeneratePdfDto, Vorstosstyp} from './dto'
+import {GeneratePdfDto, Vorstosstyp, Member} from './dto'
 
 export * from './dto'
 /**
@@ -46,6 +46,14 @@ export function htmlToLatex(html: string): string {
     .replace(/<br\s*\/?>/g, '\\\\')
     .replace(/<p>(.*?)<\/p>/g, '$1\\\\')
     .replace(/<[^>]*>/g, '') // Remove other HTML tags
+}
+
+export function memberToLabel(member: Member): string {
+  return `${member.vorname} ${member.name}${member.partei ? ` (${member.partei})` : ''}`.trim()
+}
+
+export function memberToLatex(member: Member): string {
+  return encodeLatexInput(memberToLabel(member))
 }
 
 export class VorstossValidator {
