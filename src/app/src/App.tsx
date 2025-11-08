@@ -2,6 +2,7 @@ import {useState, useRef, useEffect, useMemo} from 'react'
 import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName, memberToLabel} from '@ggr-winti/lib'
 import type {Member, ParlamentarierStatus} from '@ggr-winti/lib'
 import {Toaster, toast} from 'react-hot-toast'
+import BZip2 from './utils/bzip2'
 import Button from './components/Button'
 import Tab from './components/Tab'
 import FormGroup from './components/FormGroup'
@@ -49,6 +50,22 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [tabIndex, setTabIndex] = useState(0) // 0: Getrennt, 1: Zusammen
+
+  // Base64 URL-safe helpers
+  const toBase64Url = (b64: string): string => b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  const fromBase64Url = (b64url: string): string => {
+    let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = b64.length % 4
+    if (pad) b64 += '='.repeat(4 - pad)
+    return b64
+  }
+  const bytesToBase64Url = (bytes: Uint8Array): string => {
+    let base64 = ''
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      base64 += String.fromCharCode.apply(null, Array.from(bytes.slice(i, i + 0x8000)) as any)
+    }
+    return toBase64Url(btoa(base64))
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const {name, value, type} = e.target
@@ -144,16 +161,32 @@ function App() {
       const params = new URLSearchParams(window.location.search)
       const fileParam = params.get('file')
       if (fileParam) {
-        try {
-          const json = JSON.parse(decodeURIComponent(escape(atob(fileParam))))
-          setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
-          setErsteinreicher(json.eingereichtvon)
-          setMiteinreicher(Array.isArray(json.miteinreicher) ? json.miteinreicher : [])
-          setParlamentarier(Array.isArray(json.parlamentarier) ? json.parlamentarier : [])
-          if (typeof json.tabIndex === 'number') setTabIndex(json.tabIndex)
-        } catch (err) {
-          toast.error('Die Daten aus dem Link konnten nicht geladen werden.')
-        }
+        (async () => {
+          try {
+            // Base64-URL -> Base64 -> Bytes
+            const binary = atob(fromBase64Url(fileParam))
+            const dataBytes = Uint8Array.from(binary, c => c.charCodeAt(0))
+            // Try to treat as bzip2-compressed first, fall back to raw JSON bytes if magic mismatch
+            let jsonString = ''
+            try {
+              const bz = new BZip2()
+              await bz.init()
+              const decompressed = bz.decompress(dataBytes)
+              jsonString = new TextDecoder().decode(decompressed)
+            } catch {
+              // Fallback: assume the payload is plain JSON bytes (Base64URL(JSON))
+              jsonString = new TextDecoder().decode(dataBytes)
+            }
+            const json = JSON.parse(jsonString)
+            setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
+            setErsteinreicher(json.eingereichtvon)
+            setMiteinreicher(Array.isArray(json.miteinreicher) ? json.miteinreicher : [])
+            setParlamentarier(Array.isArray(json.parlamentarier) ? json.parlamentarier : [])
+            if (typeof json.tabIndex === 'number') setTabIndex(json.tabIndex)
+          } catch (err) {
+            toast.error('Die Daten aus dem Link konnten nicht geladen werden.')
+          }
+        })()
       } else if (!formData.eingereichtvon) {
         // wie bisher: eigenen Ersteinreicher aus localStorage setzen
         const defaultMember = getDefaultMember()
@@ -208,9 +241,17 @@ function App() {
         unterstuetzer: miteinreicher.length + (ersteinreicher ? 1 : 0),
         parlamentarier: parlamentarier.length > 0 ? parlamentarier : undefined,
       }
-      const jsonString = JSON.stringify(fullData)
-      const base64 = btoa(unescape(encodeURIComponent(jsonString)))
-      const url = `${window.location.origin}${window.location.pathname}?file=${base64}`
+      // JSON -> UTF-8 Bytes
+      const jsonBytes = new TextEncoder().encode(JSON.stringify(fullData))
+      // Try bzip2 compression (WASM)
+      const bz = new BZip2()
+      await bz.init()
+      const compressed = bz.compress(jsonBytes, 9, jsonBytes.length)
+      // Build both variants and pick the shorter one
+      const b64Compressed = bytesToBase64Url(compressed)
+      const b64Raw = bytesToBase64Url(jsonBytes)
+      const fileValue = b64Compressed.length < b64Raw.length ? b64Compressed : b64Raw
+      const url = `${window.location.origin}${window.location.pathname}?file=${fileValue}`
       await navigator.clipboard.writeText(url)
       toast.success('Link wurde in die Zwischenablage kopiert.')
     } catch (err) {
