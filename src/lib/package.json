@@ -30,6 +30,7 @@
     "rollup": "4.44.0"
   },
   "dependencies": {
-    "class-validator": "0.14.2"
+    "class-validator": "0.14.2",
+    "base64-js": "1.5.1"
   }
 }

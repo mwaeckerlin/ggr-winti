@@ -1,8 +1,8 @@
 import {useState, useRef, useEffect, useMemo} from 'react'
-import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName, memberToLabel} from '@ggr-winti/lib'
+import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName, memberToLabel, encodeBase64Url, decodeBase64Url} from '@ggr-winti/lib'
 import type {Member, ParlamentarierStatus} from '@ggr-winti/lib'
 import {Toaster, toast} from 'react-hot-toast'
-import BZip2 from './utils/bzip2'
+import BZip2 from 'bzip2-wasm'
 import Button from './components/Button'
 import Tab from './components/Tab'
 import FormGroup from './components/FormGroup'
@@ -51,21 +51,6 @@ function App() {
 
   const [tabIndex, setTabIndex] = useState(0) // 0: Getrennt, 1: Zusammen
 
-  // Base64 URL-safe helpers
-  const toBase64Url = (b64: string): string => b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
-  const fromBase64Url = (b64url: string): string => {
-    let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/')
-    const pad = b64.length % 4
-    if (pad) b64 += '='.repeat(4 - pad)
-    return b64
-  }
-  const bytesToBase64Url = (bytes: Uint8Array): string => {
-    let base64 = ''
-    for (let i = 0; i < bytes.length; i += 0x8000) {
-      base64 += String.fromCharCode.apply(null, Array.from(bytes.slice(i, i + 0x8000)) as any)
-    }
-    return toBase64Url(btoa(base64))
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const {name, value, type} = e.target
@@ -163,20 +148,11 @@ function App() {
       if (fileParam) {
         (async () => {
           try {
-            // Base64-URL -> Base64 -> Bytes
-            const binary = atob(fromBase64Url(fileParam))
-            const dataBytes = Uint8Array.from(binary, c => c.charCodeAt(0))
-            // Try to treat as bzip2-compressed first, fall back to raw JSON bytes if magic mismatch
-            let jsonString = ''
-            try {
-              const bz = new BZip2()
-              await bz.init()
-              const decompressed = bz.decompress(dataBytes)
-              jsonString = new TextDecoder().decode(decompressed)
-            } catch {
-              // Fallback: assume the payload is plain JSON bytes (Base64URL(JSON))
-              jsonString = new TextDecoder().decode(dataBytes)
-            }
+            const bz = new BZip2()
+            await bz.init()
+            const dataBytes = decodeBase64Url(fileParam)
+            const decompressed = bz.decompress(dataBytes)
+            const jsonString = new TextDecoder().decode(decompressed)
             const json = JSON.parse(jsonString)
             setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
             setErsteinreicher(json.eingereichtvon)
@@ -233,7 +209,8 @@ function App() {
 
   const handleCopyLink = async () => {
     try {
-      // Frisches Objekt mit allen Feldern bauen
+      const bz = new BZip2()
+      await bz.init()
       const fullData = {
         ...formData,
         eingereichtvon: ersteinreicher || undefined,
@@ -241,16 +218,9 @@ function App() {
         unterstuetzer: miteinreicher.length + (ersteinreicher ? 1 : 0),
         parlamentarier: parlamentarier.length > 0 ? parlamentarier : undefined,
       }
-      // JSON -> UTF-8 Bytes
       const jsonBytes = new TextEncoder().encode(JSON.stringify(fullData))
-      // Try bzip2 compression (WASM)
-      const bz = new BZip2()
-      await bz.init()
-      const compressed = bz.compress(jsonBytes, 9, jsonBytes.length)
-      // Build both variants and pick the shorter one
-      const b64Compressed = bytesToBase64Url(compressed)
-      const b64Raw = bytesToBase64Url(jsonBytes)
-      const fileValue = b64Compressed.length < b64Raw.length ? b64Compressed : b64Raw
+      const compressed = bz.compress(jsonBytes, 9)
+      const fileValue = encodeBase64Url(compressed)
       const url = `${window.location.origin}${window.location.pathname}?file=${fileValue}`
       await navigator.clipboard.writeText(url)
       toast.success('Link wurde in die Zwischenablage kopiert.')

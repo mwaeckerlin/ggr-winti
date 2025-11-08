@@ -1,6 +1,7 @@
 import {GeneratePdfDto, Vorstosstyp, Member} from './dto'
 
 export * from './dto'
+export * from './base64'
 /**
  * LaTeX Input Encoding Library
  * Escapes LaTeX commands and special characters for safe input

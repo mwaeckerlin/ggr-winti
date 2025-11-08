@@ -225,6 +225,13 @@ sudo dnf install texlive-lang-german
 - **Bevorzuge Arrow-Funktionen (`=>`)**: Arrow-Funktionen sind der Standard für Funktionen, außer es ist zwingend eine klassische Funktion nötig. Arrow-Funktionen sollten möglichst klar und ausdrucksstark formuliert sein.
 - **Imports immer auf einer Zeile**: Alle importierten Member aus einem Modul müssen in einer einzigen `import`-Anweisung auf einer Zeile stehen.
 - **Single Source of Truth (Kein Copy-Paste)**: Code darf nicht dupliziert werden. Logik, Typen oder Konstanten, die an mehr als einer Stelle benötigt werden, müssen in einer zentralen, wiederverwendbaren Funktion oder Definition in der `lib`-Bibliothek gekapselt und von dort importiert werden.
+- **Wir arbeiten effizient und minimalistisch**:
+  - Kein toter Code.
+  - Ungenutzte Libraries wieder entfernen.
+  - Keine unnötigen Kommentare, nur wenn ein erfahrener Programmierer einen Hinweis braucht.
+  - keine unnötigen Dateien oder Abstraktionen.
+  - Keine Variabeln, die nicht mindestens zweimal verwendet werden.
+  - Auf einer zeile lösen, wsa auf einer Zeole gelöst werden kann, lieber die Zeile mit Newline  unterteilen.
 
 ### Beispiele
 
@@ -259,7 +266,7 @@ const logIfPositive = n => {if (n > 0) console.log(n)}
 
 Dieses Projekt ist 100% mit KI erstellt und nicht von Hand codiert.
 
-- Halte dich immer an die Regeln und die Corierrichtlichnien, es sei denn der Befehl lautet anders.
+- Halte dich immer an die Regeln und die Codierrichtlinien, es sei denn der Befehl lautet anders.
 - Dieses Projekt ist deutsch, daher verwende hier Deutsch.
 - Fasse dich kurz und nutze keine Floskeln.
 - Antworte wenn möglich in nur einem Satz.
@@ -274,6 +281,13 @@ Dieses Projekt ist 100% mit KI erstellt und nicht von Hand codiert.
 - Wenn ein Test fehlschlägt, darf die Testannahme (z.B. erwartete Werte) nur nach Rücksprache mit dem Nutzer geändert werden. Ansonsten ist IMMER der Code so zu ändern, dass die Annahmen erfüllt werden.
 - Teste immer mit den Default-Parametern (z.B. 60 Mitglieder).
 - Lies und befolge alle Regeln IMMER.
+- Allgemeine Hilfsfunktionen immer zentral in `src/lib` (kein Duplizieren in `src/app` oder `src/srv`).
+- Bevorzuge synchrone/Exception-basierte APIs gegenüber Callback-basierten APIs.
+- Keine Verweise auf frühere Chat-/Diskussionen im Code oder in Commits. Das Projekt ist in sich konsistent.
+- Keine Meta-Kommentare (z.B. Erklärungen warum eine KI etwas tut); kommentiere nur projektbezogen und knapp.
+- Verwende bestehende Libraries statt Eigenbauten; keine selbstgestrickten Helper, wenn es etablierte Pakete gibt.
+- Mach keine Build-Kommandos, um den Build und Start kümmert sich der Entwickler.
+- Arbeite immer sorgfältig, z. B. Einrückungen immer richtig.
 
 ## Lizenz
 
