@@ -30,6 +30,24 @@ export class MemberDto implements Member {
   partei: string = ''
 }
 
+export interface ParlamentarierStatus {
+  member: Member
+  eingesehen: boolean
+  unterstuetzung: boolean
+}
+
+export class ParlamentarierStatusDto implements ParlamentarierStatus {
+  @ValidateNested()
+  @Type(() => MemberDto)
+  member: Member = {vorname: '', name: '', partei: ''}
+
+  @IsBoolean()
+  eingesehen: boolean = false
+
+  @IsBoolean()
+  unterstuetzung: boolean = false
+}
+
 export class GeneratePdfDto {
   @IsEnum(Vorstosstyp)
   vorstosstyp: Vorstosstyp = Vorstosstyp.INTERPELLATION
@@ -87,7 +105,12 @@ export class GeneratePdfDto {
   fragen?: string
   
   @IsOptional()
-  @ValidateNested({ each: true })
+  @ValidateNested({each: true})
   @Type(() => MemberDto)
   miteinreicher?: Member[]
+
+  @IsOptional()
+  @ValidateNested({each: true})
+  @Type(() => ParlamentarierStatusDto)
+  parlamentarier?: ParlamentarierStatus[]
 }

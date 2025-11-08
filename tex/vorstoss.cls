@@ -11,6 +11,9 @@
 \RequirePackage{parskip}
 \RequirePackage{fancyhdr}
 \RequirePackage{tabularx}
+\RequirePackage{longtable}
+\RequirePackage{multicol}
+\RequirePackage{amssymb}
 \RequirePackage[scaled]{helvet}
 \renewcommand{\familydefault}{\sfdefault}
 \RequirePackage{ifthen}

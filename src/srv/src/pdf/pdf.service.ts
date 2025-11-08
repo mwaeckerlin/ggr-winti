@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common'
 import {exec, spawn} from 'child_process'
 import {promisify} from 'util'
-import {GeneratePdfDto, encodeLatexInput, htmlToLatex, memberToLatex} from '@ggr-winti/lib'
+import {GeneratePdfDto, encodeLatexInput, htmlToLatex, memberToLatex, memberToLabel} from '@ggr-winti/lib'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
@@ -159,6 +159,8 @@ export class PdfService {
 
 ${processedText}
 
+${this.generateParlamentarierSeite(dto)}
+
 \\end{document}`
   }
 
@@ -191,7 +193,60 @@ ${processedAntrag}
 
 ${processedBegruendung}
 
+${this.generateParlamentarierSeite(dto)}
+
 \\end{document}`
+  }
+
+  private generateParlamentarierSeite(dto: GeneratePdfDto): string {
+    console.log('Parlamentarier:', dto.parlamentarier?.length || 0)
+    if (!dto.parlamentarier || dto.parlamentarier.length === 0) return ''
+
+    const hasAnyChecked = dto.parlamentarier.some((p) => p.eingesehen || p.unterstuetzung)
+    console.log('HasAnyChecked:', hasAnyChecked)
+
+    // Split into two columns
+    const mid = Math.ceil(dto.parlamentarier.length / 2)
+    const leftHalf = dto.parlamentarier.slice(0, mid)
+    const rightHalf = dto.parlamentarier.slice(mid)
+
+    const generateRows = (members: typeof dto.parlamentarier) => {
+      return members.map((p) => {
+        const name = encodeLatexInput(memberToLabel(p.member))
+        const eingesehen = hasAnyChecked && p.eingesehen ? '$\\checkmark$' : ''
+        const unterstuetzung = hasAnyChecked ? (p.unterstuetzung ? '$\\times$' : '') : ''
+        return `${eingesehen} & ${name} & ${unterstuetzung} \\\\\\hline`
+      }).join('\n')
+    }
+
+    const colSpec = `|c|l|${hasAnyChecked ? 'c' : 'p{2cm}'}|`
+
+    return `
+\\newpage
+
+\\section*{Parlamentarier}
+
+\\noindent
+\\begin{minipage}[t]{0.48\\textwidth}
+\\begin{longtable}{${colSpec}}
+\\hline
+\\textbf{E} & \\textbf{Name} & \\textbf{U} \\\\
+\\hline
+\\endhead
+${generateRows(leftHalf)}
+\\end{longtable}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}
+\\begin{longtable}{${colSpec}}
+\\hline
+\\textbf{E} & \\textbf{Name} & \\textbf{U} \\\\
+\\hline
+\\endhead
+${generateRows(rightHalf)}
+\\end{longtable}
+\\end{minipage}
+`
   }
 
   private buildClassOptions(dto: GeneratePdfDto): string {

@@ -485,3 +485,48 @@ footer {
 .order-row__btn--danger {
   color: var(--color-delete);
 }
+
+/* =============================================================
+   Parlamentarier-Liste (zweite Seite im Link-Modus)
+   ============================================================= */
+
+.parlamentarier-liste {
+  margin-top: var(--space-6);
+  padding: var(--layout-padding);
+  background-color: var(--color-light);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--border-radius-md);
+}
+
+.parlamentarier-grid {
+  column-count: 2;
+  column-gap: var(--space-6);
+}
+
+.parlamentarier-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.parlamentarier-header {
+  font-weight: var(--font-weight-bold);
+  padding: var(--space-2);
+  border-bottom: 2px solid var(--color-border);
+  text-align: center;
+}
+
+.parlamentarier-cell {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.parlamentarier-cell:nth-child(2) {
+  justify-content: flex-start;
+}

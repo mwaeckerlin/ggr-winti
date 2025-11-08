@@ -1,15 +1,21 @@
 import {useState, useRef, useEffect, useMemo} from 'react'
 import {generateFilename, GeneratePdfDto, Vorstosstyp, formatDate, getVorstossName, memberToLabel} from '@ggr-winti/lib'
-import type { Member } from '@ggr-winti/lib'
+import type {Member, ParlamentarierStatus} from '@ggr-winti/lib'
 import {Toaster, toast} from 'react-hot-toast'
 import Button from './components/Button'
 import Tab from './components/Tab'
 import FormGroup from './components/FormGroup'
 
 function App() {
+  const [mitglieder, setMitglieder] = useState<Member[]>([])
+  const [ersteinreicher, setErsteinreicher] = useState<Member | null>(null)
+  const [miteinreicher, setMiteinreicher] = useState<Member[]>([])
+  const [parlamentarier, setParlamentarier] = useState<ParlamentarierStatus[]>([])
+  const [linkMode, setLinkMode] = useState(false)
+
   // Link-Mode erkennen
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-  const isLinkMode = searchParams?.has('file')
+  const isLinkMode = searchParams?.has('file') || linkMode
 
   // Eigener Ersteinreicher aus localStorage holen
   const getDefaultMember = (): Member | null => {
@@ -43,10 +49,6 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [tabIndex, setTabIndex] = useState(0) // 0: Getrennt, 1: Zusammen
-
-  const [mitglieder, setMitglieder] = useState<Member[]>([])
-  const [ersteinreicher, setErsteinreicher] = useState<Member | null>(null)
-  const [miteinreicher, setMiteinreicher] = useState<Member[]>([])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const {name, value, type} = e.target
@@ -98,6 +100,10 @@ function App() {
 
             setErsteinreicher(json.eingereichtvon)
             setMiteinreicher(Array.isArray(json.miteinreicher) ? json.miteinreicher : [])
+            setParlamentarier(Array.isArray(json.parlamentarier) ? json.parlamentarier : [])
+            if (json.nummer || (json.parlamentarier && json.parlamentarier.length > 0)) {
+              setLinkMode(true)
+            }
 
             // Ergänze fehlende Mitglieder in der Liste
             const neue = [json.eingereichtvon, ...(json.miteinreicher || [])]
@@ -143,6 +149,7 @@ function App() {
           setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
           setErsteinreicher(json.eingereichtvon)
           setMiteinreicher(Array.isArray(json.miteinreicher) ? json.miteinreicher : [])
+          setParlamentarier(Array.isArray(json.parlamentarier) ? json.parlamentarier : [])
           if (typeof json.tabIndex === 'number') setTabIndex(json.tabIndex)
         } catch (err) {
           toast.error('Die Daten aus dem Link konnten nicht geladen werden.')
@@ -175,6 +182,9 @@ function App() {
           })
         })
         setMitglieder(flat)
+        if (isLinkMode && parlamentarier.length === 0) {
+          setParlamentarier(flat.map((m) => ({member: m, eingesehen: false, unterstuetzung: false})))
+        }
       })
   }, [])
 
@@ -184,8 +194,9 @@ function App() {
       eingereichtvon: ersteinreicher || undefined,
       miteinreicher: miteinreicher.length > 0 ? miteinreicher : undefined,
       unterstuetzer: miteinreicher.length + (ersteinreicher ? 1 : 0),
+      parlamentarier: parlamentarier.length > 0 ? parlamentarier : undefined,
     }))
-  }, [ersteinreicher, miteinreicher])
+  }, [ersteinreicher, miteinreicher, parlamentarier])
 
   const handleCopyLink = async () => {
     try {
@@ -195,6 +206,7 @@ function App() {
         eingereichtvon: ersteinreicher || undefined,
         miteinreicher: miteinreicher.length > 0 ? miteinreicher : undefined,
         unterstuetzer: miteinreicher.length + (ersteinreicher ? 1 : 0),
+        parlamentarier: parlamentarier.length > 0 ? parlamentarier : undefined,
       }
       const jsonString = JSON.stringify(fullData)
       const base64 = btoa(unescape(encodeURIComponent(jsonString)))
@@ -459,6 +471,44 @@ function App() {
             )}
           </FormGroup>
         </form>
+
+        {isLinkMode && parlamentarier.length > 0 && (
+          <div className="parlamentarier-liste">
+            <h2 className="form-title">Parlamentarier</h2>
+            <div className="parlamentarier-grid">
+              {parlamentarier.map((p, idx) => (
+                <div key={idx} className="parlamentarier-row">
+                  <div className="parlamentarier-cell">
+                    <input
+                      type="checkbox"
+                      checked={p.eingesehen}
+                      onChange={(e) => {
+                        const updated = [...parlamentarier]
+                        updated[idx].eingesehen = e.target.checked
+                        setParlamentarier(updated)
+                      }}
+                    />
+                  </div>
+                  <div className="parlamentarier-cell">
+                    {memberToLabel(p.member)}
+                  </div>
+                  <div className="parlamentarier-cell">
+                    <input
+                      type="checkbox"
+                      checked={p.unterstuetzung}
+                      onChange={(e) => {
+                        const updated = [...parlamentarier]
+                        updated[idx].unterstuetzung = e.target.checked
+                        setParlamentarier(updated)
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
   <input type="file" accept="application/json" className="hidden" ref={fileInputRef} />
       </main>
       <footer>
