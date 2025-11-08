@@ -121,6 +121,7 @@ function App() {
             }
             resolve()
           } catch (err) {
+            console.error(err)
             toast.error('Ungültige Datei.')
             reject(err)
           } finally {
@@ -151,7 +152,7 @@ function App() {
             const bz = new BZip2()
             await bz.init()
             const dataBytes = decodeBase64Url(fileParam)
-            const decompressed = bz.decompress(dataBytes)
+            const decompressed = bz.decompress(dataBytes, dataBytes.length * 10)
             const jsonString = new TextDecoder().decode(decompressed)
             const json = JSON.parse(jsonString)
             setFormData((prev: GeneratePdfDto) => ({...prev, ...json}))
@@ -160,6 +161,7 @@ function App() {
             setParlamentarier(Array.isArray(json.parlamentarier) ? json.parlamentarier : [])
             if (typeof json.tabIndex === 'number') setTabIndex(json.tabIndex)
           } catch (err) {
+            console.error(err)
             toast.error('Die Daten aus dem Link konnten nicht geladen werden.')
           }
         })()
@@ -225,6 +227,7 @@ function App() {
       await navigator.clipboard.writeText(url)
       toast.success('Link wurde in die Zwischenablage kopiert.')
     } catch (err) {
+      console.error(err)
       toast.error('Der Link konnte nicht in die Zwischenablage kopiert werden.')
     }
   }
@@ -248,7 +251,7 @@ function App() {
             message = Array.isArray(serverMessage) ? serverMessage.join(' ') : serverMessage
           }
         } catch (e) {
-          // ignore if response is not json
+          console.error(e)
         }
         throw new Error(message)
       }
@@ -262,6 +265,7 @@ function App() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (err: any) {
+      console.error(err)
       toast.error(err.message || 'Ein unbekannter Fehler ist aufgetreten.')
     }
   }
